@@ -1,0 +1,41 @@
+.navbar {
+  position: fixed;
+  width: 100vw;
+  background: #2d4238b7;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 1rem 2rem;
+  box-sizing: border-box;
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-size: 1.2rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+
+.navbar-title {
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: 2rem;
+  margin-right: 4rem;
+  letter-spacing: 2px;
+  margin-left: 20px;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 3rem;
+}
+
+.navbar a {
+  color: #fff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.navbar a:hover {
+  color: #f9a826;
+}
