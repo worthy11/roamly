@@ -37,6 +37,7 @@ body {
     transparent 20px
   );
   background-size: 30px 30px;
+  background-attachment: fixed;
 }
 
 h1 {
