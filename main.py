@@ -33,7 +33,7 @@ class Message(BaseModel):
 
 clients: List[WebSocket] = []
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 @app.get("/")
 async def root():
