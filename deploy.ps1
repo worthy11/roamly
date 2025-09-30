@@ -9,6 +9,11 @@ Get-Content ".env" | ForEach-Object {
 $RESOURCE_GROUP = $env:RESOURCE_GROUP
 $APP_NAME = $env:APP_NAME
 
-& "C:\Program Files\7-Zip\7z.exe" a -tzip hackyeah2025.zip ./static/* ./main.py ./requirements.txt -spf
-az webapp deploy --resource-group $RESOURCE_GROUP --name $APP_NAME --src-path hackyeah2025.zip --type zip
-Remove-Item hackyeah2025.zip
+Push-Location frontend
+npm run build
+Pop-Location
+
+Copy-Item -Path "./frontend/dist/*" -Destination ./static/ -Recurse -Force
+& "C:\Program Files\7-Zip\7z.exe" a -tzip roamly.zip ./main.py ./requirements.txt ./static/* ./db/* ./app/* "-x!app/__pycache__/*" -spf
+az webapp deploy --resource-group $RESOURCE_GROUP --name $APP_NAME --src-path roamly.zip --type zip
+Remove-Item roamly.zip

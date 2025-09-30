@@ -32,7 +32,7 @@ class Trip(Base):
 
 class City(Base):
     __tablename__ = "cities"
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    city_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
     country = Column(String, nullable=False)
     lat = Column(Float)
@@ -43,9 +43,9 @@ class City(Base):
 
 class TripCity(Base):
     __tablename__ = "trip_cities"
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    relation_id = Column(Integer, primary_key=True, autoincrement=True)
     trip_id = Column(Integer, ForeignKey("trips.trip_id"), nullable=False)
-    city_id = Column(Integer, ForeignKey("cities.id"), nullable=False)
+    city_id = Column(Integer, ForeignKey("cities.city_id"), nullable=False)
 
     trip = relationship("Trip", back_populates="cities")
     city = relationship("City", back_populates="trips")
@@ -61,8 +61,7 @@ class UserRead(BaseModel):
     name: str
     email: str
 
-    class Config:
-        orm_mode = True
+    model_config = dict(from_attributes=True)
 
 
 class TripCreate(BaseModel):
@@ -74,6 +73,11 @@ class TripCreate(BaseModel):
     budget: Optional[float] = None
     cities: List[str]
 
+class CityRead(BaseModel):
+    name: str
+    lat: float
+    lon: float
+    model_config = dict(from_attributes=True)
 
 class TripRead(BaseModel):
     trip_id: int
@@ -83,7 +87,6 @@ class TripRead(BaseModel):
     num_people: Optional[int]
     activity_level: Optional[str]
     budget: Optional[float]
-    cities: List[str] = []
+    cities: List[CityRead] = []
 
-    class Config:
-        orm_mode = True
+    model_config = dict(from_attributes=True)
