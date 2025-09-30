@@ -25,6 +25,7 @@ class Trip(Base):
     num_people = Column(Integer)
     activity_level = Column(String)
     budget = Column(Float)
+    embedding = Column(Text)
 
     user = relationship("User", back_populates="trips")
     cities = relationship("TripCity", back_populates="trip")
