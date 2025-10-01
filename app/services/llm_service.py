@@ -27,7 +27,7 @@ class LLMService:
         self.agent_executor = AgentExecutor(
             agent=self.agent,
             tools=self.tools,
-            verbose=False,
+            verbose=True,
             handle_parsing_errors=True
         )
     
