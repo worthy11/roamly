@@ -103,20 +103,11 @@ def insert_dummies():
 
     cur.execute(dummy_users)
 
-    print("Generating embeddings for trips...")
+    print("Generating embeddings for trips (description only)...")
     for (trip, cities) in dummy_trips:
         user_id, country, description, duration, num_people, activity_level, budget, _ = trip
         
-        trip_data = {
-            "country": country,
-            "description": description,
-            "activity_level": activity_level,
-            "duration": duration,
-            "budget": budget
-        }
-        
-        trip_text = embedding_service.generate_trip_text(trip_data)
-        embedding = embedding_service.generate_embedding(trip_text)
+        embedding = embedding_service.generate_embedding(description)
         embedding_json = embedding_service.serialize_embedding(embedding)
         
         cur.execute("""

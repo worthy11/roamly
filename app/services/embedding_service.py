@@ -10,18 +10,7 @@ class EmbeddingService:
         return self.embeddings.embed_query(text)
     
     def generate_trip_text(self, trip_data: dict) -> str:
-        parts = []
-        if trip_data.get('country'):
-            parts.append(f"Country: {trip_data['country']}")
-        if trip_data.get('description'):
-            parts.append(f"Description: {trip_data['description']}")
-        if trip_data.get('activity_level'):
-            parts.append(f"Activity level: {trip_data['activity_level']}")
-        if trip_data.get('duration'):
-            parts.append(f"Duration: {trip_data['duration']} days")
-        if trip_data.get('budget'):
-            parts.append(f"Budget: ${trip_data['budget']}")
-        return " | ".join(parts)
+        return trip_data.get('description', '')
     
     def serialize_embedding(self, embedding: List[float]) -> str:
         return json.dumps(embedding)
