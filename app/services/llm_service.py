@@ -6,7 +6,7 @@ from app.utils.tools import search_trips, get_sql_tool
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 class LLMService:
     def __init__(self):
@@ -36,6 +36,7 @@ class LLMService:
             "input": message,
             "chat_history": chat_history or []
         })
+        print("here")
         return response["output"]
 
 llm_service = LLMService()

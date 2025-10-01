@@ -37,6 +37,31 @@ function App() {
     setMessage("");
   };
 
+  async function fetchResponse() {
+    try {
+      const response = await fetch(`${API_BASE}/chat/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: 0,
+          message: message,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(data.response);
+    } catch (error) {
+      console.error("Error fetching response:", error);
+      return { error: error.message };
+    }
+  }
+
   const center = {
     lat: 20,
     lng: 0,

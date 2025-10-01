@@ -14,6 +14,6 @@ npm run build
 Pop-Location
 
 Copy-Item -Path "./frontend/dist/*" -Destination ./static/ -Recurse -Force
-& "C:\Program Files\7-Zip\7z.exe" a -tzip roamly.zip ./main.py ./requirements.txt ./static/* ./db/* ./app/* "-xr!__pycache__" -spf
+& "C:\Program Files\7-Zip\7z.exe" a -tzip roamly.zip ./main.py ./requirements.txt ./static/* ./db/* ./app/* ./.env "-xr!__pycache__" -spf
 az webapp deploy --resource-group $RESOURCE_GROUP --name $APP_NAME --src-path roamly.zip --type zip
 Remove-Item roamly.zip

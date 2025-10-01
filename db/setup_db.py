@@ -2,7 +2,7 @@ import sqlite3
 from pathlib import Path
 from app.services.embedding_service import embedding_service
 
-DB_PATH = Path(__file__).resolve().parent / "db" / "roamly.db"
+DB_PATH = Path(__file__).resolve().parent / "roamly.db"
 DB_PATH.parent.mkdir(exist_ok=True)
 
 schema = """
@@ -131,5 +131,5 @@ def insert_dummies():
 
 if __name__ == "__main__":
     init_db()
-    import_cities("worldcities.csv")
+    import_cities("db/worldcities.csv")
     insert_dummies()
