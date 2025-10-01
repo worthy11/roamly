@@ -6,11 +6,13 @@ from passlib.context import CryptContext
 from typing import List
 import os
 
-from app.routers import users, trips
+from app.routers import users, trips, chat
+
 
 app = FastAPI()
 app.include_router(users.router)
 app.include_router(trips.router)
+app.include_router(chat.router)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

@@ -1,5 +1,6 @@
 import sqlite3
 from pathlib import Path
+from app.services.embedding_service import embedding_service
 
 DB_PATH = Path(__file__).resolve().parent / "db" / "roamly.db"
 DB_PATH.parent.mkdir(exist_ok=True)
@@ -102,11 +103,26 @@ def insert_dummies():
 
     cur.execute(dummy_users)
 
+    print("Generating embeddings for trips...")
     for (trip, cities) in dummy_trips:
+        user_id, country, description, duration, num_people, activity_level, budget, _ = trip
+        
+        trip_data = {
+            "country": country,
+            "description": description,
+            "activity_level": activity_level,
+            "duration": duration,
+            "budget": budget
+        }
+        
+        trip_text = embedding_service.generate_trip_text(trip_data)
+        embedding = embedding_service.generate_embedding(trip_text)
+        embedding_json = embedding_service.serialize_embedding(embedding)
+        
         cur.execute("""
             INSERT INTO trips (user_id, country, description, duration, num_people, activity_level, budget, embedding)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, trip)
+        """, (user_id, country, description, duration, num_people, activity_level, budget, embedding_json))
 
         trip_id = cur.lastrowid
         for city in cities:
@@ -114,9 +130,12 @@ def insert_dummies():
             city_id = cur.fetchone()[0]
             
             cur.execute("INSERT INTO trip_cities (trip_id, city_id) VALUES (?, ?)", (trip_id, city_id))
+        
+        print(f"  ✓ Trip {trip_id}: {country} - {description[:50]}...")
 
     conn.commit()
     conn.close()
+    print(f"Successfully inserted {len(dummy_trips)} trips with embeddings!")
 
 
 if __name__ == "__main__":
