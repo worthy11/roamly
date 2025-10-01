@@ -1,10 +1,8 @@
 import Layout from "./components/Layout";
-import "./App.css";
-import { MapContainer, TileLayer } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+import './App.css'
 import { useState } from "react";
 import { BsRobot } from "react-icons/bs";
-import { API_BASE } from "./config";
+import { GoogleMap, LoadScript } from "@react-google-maps/api";
 
 function App() {
   const [message, setMessage] = useState("");
@@ -17,16 +15,25 @@ function App() {
     setMessage("");
   };
 
+  const center = {
+    lat: 20,
+    lng: 0
+  };
+
   return (
     <>
       <Layout>
         <div className="map-wrapper">
-          <MapContainer center={[20, 0]} zoom={2} className="custom-map">
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution="&copy; OpenStreetMap contributors"
-            />
-          </MapContainer>
+          <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+          language="en">
+            <GoogleMap
+            mapContainerClassName="custom-map"
+            center={center}
+            zoom={2}
+            mapTypeId="roadmap"
+      >
+            </GoogleMap>
+          </LoadScript>
         </div>
         <div className="chatbot-container">
           <h2 className="chatbot-title">
