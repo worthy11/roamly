@@ -3,7 +3,7 @@ from pathlib import Path
 from app.services.embedding_service import embedding_service
 from app.services.vector_search_service import vector_search_service
 
-DB_PATH = Path(__file__).resolve().parent / "db" / "roamly.db"
+DB_PATH = Path(__file__).resolve().parent.parent / "db" / "roamly.db"
 
 def test_vector_search():
     conn = sqlite3.connect(DB_PATH)
@@ -52,3 +52,4 @@ def test_vector_search():
 
 if __name__ == "__main__":
     test_vector_search()
+
