@@ -1,13 +1,11 @@
 from fastapi import FastAPI, WebSocket, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from passlib.context import CryptContext
 from typing import List
 import os
 
 from app.routers import users, trips, chat
-
 
 app = FastAPI()
 app.include_router(users.router)

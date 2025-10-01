@@ -91,3 +91,11 @@ class TripRead(BaseModel):
     cities: List[CityRead] = []
 
     model_config = dict(from_attributes=True)
+
+class ChatRequest(BaseModel):
+    user_id: int
+    message: str
+
+class ChatResponse(BaseModel):
+    response: str
+    user_id: int

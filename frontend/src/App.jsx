@@ -1,8 +1,13 @@
 import Layout from "./components/Layout";
-import './App.css'
+import "./App.css";
 import { useState, useEffect } from "react";
 import { BsRobot } from "react-icons/bs";
-import { GoogleMap, LoadScript, MarkerF, InfoWindowF  } from "@react-google-maps/api";
+import {
+  GoogleMap,
+  LoadScript,
+  MarkerF,
+  InfoWindowF,
+} from "@react-google-maps/api";
 import { API_BASE } from "./config";
 
 function App() {
@@ -11,21 +16,19 @@ function App() {
   const [trips, setTrips] = useState([]);
   const [selectedTrip, setSelectedTrip] = useState(null);
 
-
   useEffect(() => {
-  const fetchTrips = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/trips/`); 
-      const data = await response.json();
-      setTrips(data);
-    } catch (err) {
-      console.error("Error fetching trips:", err);
-    }
-  };
+    const fetchTrips = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/trips/`);
+        const data = await response.json();
+        setTrips(data);
+      } catch (err) {
+        console.error("Error fetching trips:", err);
+      }
+    };
 
-  fetchTrips();
-  
-}, []);
+    fetchTrips();
+  }, []);
 
   const handleSend = (e) => {
     e.preventDefault();
@@ -36,58 +39,73 @@ function App() {
 
   const center = {
     lat: 20,
-    lng: 0
+    lng: 0,
   };
 
   return (
     <>
       <Layout>
         <div className="map-wrapper">
-          <LoadScript 
+          <LoadScript
             googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
             language="en"
           >
             <GoogleMap
-  mapContainerClassName="custom-map"
-  center={center}
-  zoom={2}
-  mapTypeId="roadmap"
-  options={{
-    streetViewControl: false,
-    mapTypeControl: false,
-  }}
->
-  {trips.map(trip =>
-    trip.cities.map(city => (
-      <MarkerF
-        key={`${trip.trip_id}-${city.name}`}
-        position={{ lat: city.lat, lng: city.lon }}
-        title={`${trip.country} - ${city.name}`}
-        icon={{
-        url: "http://maps.google.com/mapfiles/kml/pal4/icon49.png",
-        scaledSize: new window.google.maps.Size(40, 40), // optional size
-  }}
-        onClick={() => setSelectedTrip({ trip, city })}
-      />
-    ))
-  )}
+              mapContainerClassName="custom-map"
+              center={center}
+              zoom={2}
+              mapTypeId="roadmap"
+              options={{
+                streetViewControl: false,
+                mapTypeControl: false,
+              }}
+            >
+              {trips.map((trip) =>
+                trip.cities.map((city) => (
+                  <MarkerF
+                    key={`${trip.trip_id}-${city.name}`}
+                    position={{ lat: city.lat, lng: city.lon }}
+                    title={`${trip.country} - ${city.name}`}
+                    icon={{
+                      url: "http://maps.google.com/mapfiles/kml/pal4/icon49.png",
+                      scaledSize: new window.google.maps.Size(40, 40), // optional size
+                    }}
+                    onClick={() => setSelectedTrip({ trip, city })}
+                  />
+                ))
+              )}
 
-  {selectedTrip && (
-    <InfoWindowF
-    position={{ lat: selectedTrip.city.lat, lng: selectedTrip.city.lon }}
-    onCloseClick={() => setSelectedTrip(null)}
-  >
-    <div className="info-window">
-      <h3>{selectedTrip.city.name}, {selectedTrip.trip.country}</h3>
-      {selectedTrip.trip.description && <p>{selectedTrip.trip.description}</p>}
-      {selectedTrip.trip.duration && <p>Duration: {selectedTrip.trip.duration} days</p>}
-      {selectedTrip.trip.budget && <p>Budget: ${selectedTrip.trip.budget}</p>}
-      {selectedTrip.trip.num_people && <p>People: {selectedTrip.trip.num_people}</p>}
-      {selectedTrip.trip.activity_level && <p>Activity: {selectedTrip.trip.activity_level}</p>}
-    </div>
-  </InfoWindowF>
-  )}
-</GoogleMap>
+              {selectedTrip && (
+                <InfoWindowF
+                  position={{
+                    lat: selectedTrip.city.lat,
+                    lng: selectedTrip.city.lon,
+                  }}
+                  onCloseClick={() => setSelectedTrip(null)}
+                >
+                  <div className="info-window">
+                    <h3>
+                      {selectedTrip.city.name}, {selectedTrip.trip.country}
+                    </h3>
+                    {selectedTrip.trip.description && (
+                      <p>{selectedTrip.trip.description}</p>
+                    )}
+                    {selectedTrip.trip.duration && (
+                      <p>Duration: {selectedTrip.trip.duration} days</p>
+                    )}
+                    {selectedTrip.trip.budget && (
+                      <p>Budget: ${selectedTrip.trip.budget}</p>
+                    )}
+                    {selectedTrip.trip.num_people && (
+                      <p>People: {selectedTrip.trip.num_people}</p>
+                    )}
+                    {selectedTrip.trip.activity_level && (
+                      <p>Activity: {selectedTrip.trip.activity_level}</p>
+                    )}
+                  </div>
+                </InfoWindowF>
+              )}
+            </GoogleMap>
           </LoadScript>
         </div>
 
@@ -114,7 +132,11 @@ function App() {
               onChange={(e) => setMessage(e.target.value)}
               className="chat-input"
             />
-            <button type="submit" className="chat-send-btn">
+            <button
+              type="submit"
+              className="chat-send-btn"
+              onClick={fetchResponse}
+            >
               Send
             </button>
           </form>
@@ -125,4 +147,3 @@ function App() {
 }
 
 export default App;
-
