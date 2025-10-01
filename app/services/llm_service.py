@@ -2,7 +2,7 @@ from langchain_openai import ChatOpenAI
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from typing import List, Dict
 from app.utils.prompts import get_chat_prompt
-from app.utils.tools import search_trips
+from app.utils.tools import search_trips, get_sql_tool
 import os
 from dotenv import load_dotenv
 
@@ -20,13 +20,14 @@ class LLMService:
             api_key=api_key
         )
         
-        self.tools = [search_trips]
+        sql_tool = get_sql_tool()
+        self.tools = [search_trips] + sql_tool
         self.prompt = get_chat_prompt()
         self.agent = create_tool_calling_agent(self.llm, self.tools, self.prompt)
         self.agent_executor = AgentExecutor(
             agent=self.agent,
             tools=self.tools,
-            verbose=False,
+            verbose=True,
             handle_parsing_errors=True
         )
     
@@ -38,4 +39,3 @@ class LLMService:
         return response["output"]
 
 llm_service = LLMService()
-
