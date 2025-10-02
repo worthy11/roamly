@@ -4,6 +4,7 @@ from langchain_community.agent_toolkits import SQLDatabaseToolkit
 from langchain_openai import ChatOpenAI
 from app.services.vector_search_service import vector_search_service
 from app.database import SessionLocal
+from app.models import TripPlan
 import os
 from dotenv import load_dotenv
 
@@ -11,7 +12,7 @@ load_dotenv()
 
 @tool
 def search_trips(query: str, top_k: int = 3) -> str:
-    """Search for trips based on description/experience. Use this when users describe the TYPE of trip they want (romantic, adventure, cultural, relaxing, beach, etc.)."""
+    """Search existing trips in database based on description/experience. Use when users want to see what trips are available (not when planning a new trip)."""
     db = SessionLocal()
     try:
         results = vector_search_service.search_trips(db, query, top_k)
@@ -49,3 +50,135 @@ def get_sql_tool():
     
     return [t for t in sql_tools if t.name in ["sql_db_query", "sql_db_schema", "sql_db_list_tables"]]
 
+from amadeus import Client, ResponseError
+
+amadeus = Client(
+    client_id=os.getenv("AMADEUS_API_KEY"),
+    client_secret=os.getenv("AMADEUS_API_SECRET")
+)
+
+def normalize_flight(offer):
+    itinerary = offer["itineraries"][0]
+    segment = itinerary["segments"][0]
+    return {
+        "mode": "flight",
+        "provider": "Amadeus",
+        "price": float(offer["price"]["total"]),
+        "currency": offer["price"]["currency"],
+        "duration": itinerary["duration"],
+        "seats_available": offer.get("numberOfBookableSeats"),
+        "co2_kg": offer["travelerPricings"][0]
+            .get("fareDetailsBySegment", [{}])[0]
+            .get("co2Emissions", [{}])[0]
+            .get("weight", None),
+        "details": {
+            "airline": segment["carrierCode"],
+            "from": segment["departure"]["iataCode"],
+            "to": segment["arrival"]["iataCode"],
+            "departure": segment["departure"]["at"],
+            "arrival": segment["arrival"]["at"],
+        }
+    }
+
+@tool
+def search_transport(origin: str, destination: str, date: str, passengers: int, pref_type: str):
+    options = []
+
+    if not pref_type or pref_type == "plane":
+        for flight in get_flights(origin, destination, date, passengers):
+            options.append(flight)
+        
+    if not options or not pref_type or pref_type == "train":
+        for train in get_trains(origin, destination, date, passengers):
+            options.append(train)
+
+    if not options or not pref_type or pref_type == "car":
+        for car in get_car_routes(origin, destination, date, passengers):
+            options.append(car)
+
+    top_k = select_top_transport(options)
+    return top_k
+
+def get_flights(origin: str, destination: str, date: str, passengers: int):
+    """Find flight offers between two cities on a given date."""
+
+    try:
+        resp = amadeus.shopping.flight_offers_search.get(
+            originLocationCode=origin,
+            destinationLocationCode=destination,
+            departureDate=date,
+            adults=passengers,
+            max=5
+        )
+        results = [normalize_flight(offer) for offer in resp.data]
+        return results
+    except ResponseError as e:
+        return {"error": str(e)}
+
+    async def _arun(self, *args, **kwargs):
+        raise NotImplementedError
+
+def get_trains(origin, destination, date, passengers):
+    return []
+
+def get_car_routes(origin, destination, date, passengers):
+    return []
+
+def select_top_transport(options: list):
+    """Select cheapest, fastest, and most eco-friendly from transport options."""
+
+    cheapest = min(options, key=lambda x: x["price"])
+    eco = min(options, key=lambda x: x["co2_kg"])
+    # fastest = min(options, key=lambda x: parse_duration(x["duration"]))
+    return {
+        "cheapest": cheapest,
+        "eco": eco,
+        # "fastest": fastest,
+    }
+
+@tool
+def structure_trip_plan(transport_options: dict, acc_options: dict, keypoints: dict) -> str:
+    """Plan a NEW custom trip itinerary. Use when users ask you to PLAN or CREATE a trip (not when searching existing trips)."""
+    from app.utils.prompts import get_trip_planning_prompt
+    
+    api_key = os.getenv("OPENAI_API_KEY")
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7, api_key=api_key)
+    
+    structured_llm = llm.with_structured_output(TripPlan)
+    prompt = get_trip_planning_prompt()
+    
+    try:
+        trip_plan = structured_llm.invoke(prompt)
+        
+        result = f"""# {trip_plan.destination} Trip Plan
+
+**Duration:** {trip_plan.duration_days}
+
+---
+
+## 🚗 Travel
+
+{trip_plan.travel}
+
+---
+
+## 🏨 Accommodation
+
+{trip_plan.accommodation}
+
+---
+
+## 💰 Costs
+
+{trip_plan.costs}
+
+---
+
+## 🎯 Attractions
+
+{trip_plan.attractions}
+"""
+        
+        return result
+    except Exception as e:
+        return f"Error planning trip: {str(e)}"

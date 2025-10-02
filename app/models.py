@@ -99,3 +99,23 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     response: str
     user_id: int
+
+class TripRequest(BaseModel):
+    start_location: str
+    destination: Optional[str] = ""
+    transport: Optional[str] = ""
+    num_people: Optional[int] = 1
+    start_date: Optional[str] = ""
+    end_date: Optional[str] = ""
+    activity_level: Optional[str] = ""
+    pop_density: Optional[str] = "medium"
+    budget: Optional[float] = 1000
+    keypoints: Optional[List[str]] = []
+
+class TripPlan(BaseModel):
+    destination: str
+    duration_days: str
+    travel: str
+    accommodation: str
+    costs: str
+    attractions: str

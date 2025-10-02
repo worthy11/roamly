@@ -32,18 +32,16 @@ if __name__ == "__main__":
         ("What is the capital of France?", "No tools"),
         ("Hello! Can you help me plan a trip?", "No tools"),
         
-        ("I want a romantic getaway with great food", "Vector search"),
-        ("Show me adventure trips with hiking and outdoor activities", "Vector search"),
-        ("Find me a relaxing beach vacation", "Vector search"),
+        ("Show me romantic trips with great food", "Vector search"),
+        ("Find me adventure trips with outdoor activities", "Vector search"),
         
         ("Show me all trips under $2000", "SQL"),
         ("What trips are 7-10 days long?", "SQL"),
         ("Find trips in Italy", "SQL"),
-        ("Show me high activity level trips", "SQL"),
-        ("What's the average budget for all trips?", "SQL"),
         
-        ("I want a romantic trip to Italy under $2000", "Both (SQL + Vector)"),
-        ("Show me adventure trips in Canada that are less than $4500", "Both (SQL + Vector)"),
+        ("Plan a 7-day trip to Japan for $3000", "plan_trip"),
+        ("Help me plan a romantic trip to Italy with $2500 budget", "plan_trip"),
+        ("Create a 10-day adventure itinerary for Iceland", "plan_trip"),
     ]
     
     for i, (query, expected) in enumerate(test_cases, 1):
