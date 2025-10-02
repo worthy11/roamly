@@ -177,3 +177,66 @@ def select_top_transport():
             "eco": eco,
             # "fastest": fastest,
         }
+
+@tool
+def search_hotels(city_code: str, check_in_date: str, check_out_date: str, adults: int = 1, radius: int = 5) -> str:
+    """Search for hotels in a city using Amadeus API. Use when users need accommodation information.
+    
+    Args:
+        city_code: IATA city code (e.g., 'NYC', 'PAR', 'LON')
+        check_in_date: Check-in date in YYYY-MM-DD format
+        check_out_date: Check-out date in YYYY-MM-DD format
+        adults: Number of adult guests (default: 1)
+        radius: Search radius in km (default: 5)
+    """
+    try:
+        response = amadeus.shopping.hotel_offers_search.get(
+            cityCode=city_code,
+            checkInDate=check_in_date,
+            checkOutDate=check_out_date,
+            adults=adults,
+            radius=radius,
+            radiusUnit='KM',
+            ratings=['3', '4', '5'],
+            bestRateOnly=True
+        )
+        
+        hotels = response.data[:10]
+        
+        if not hotels:
+            return f"No hotels found in {city_code} for {check_in_date} to {check_out_date}."
+        
+        output = f"Found {len(hotels)} hotel options in {city_code}:\n\n"
+        
+        for i, hotel in enumerate(hotels, 1):
+            name = hotel.get('hotel', {}).get('name', 'Unknown Hotel')
+            offers = hotel.get('offers', [])
+            
+            if offers:
+                offer = offers[0]
+                price = offer.get('price', {})
+                total = price.get('total', 'N/A')
+                currency = price.get('currency', 'USD')
+                room = offer.get('room', {})
+                room_type = room.get('typeEstimated', {}).get('category', 'Standard')
+                beds = room.get('typeEstimated', {}).get('beds', 1)
+                
+                output += f"{i}. {name}\n"
+                output += f"   Price: {total} {currency} per stay\n"
+                output += f"   Room: {room_type} ({beds} bed(s))\n"
+                
+                rating = hotel.get('hotel', {}).get('rating')
+                if rating:
+                    output += f"   Rating: {rating} stars\n"
+                
+                output += "\n"
+            else:
+                output += f"{i}. {name} - No offers available\n\n"
+        
+        return output
+    
+    except ResponseError as e:
+        return f"Error searching hotels: {str(e)}"
+    except Exception as e:
+        return f"Error: {str(e)}"
+    
