@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
-from app.models import ChatRequest, ChatResponse, TripRequest
+from app.models import ChatRequest, ChatResponse, TripRequest, TripPlan
 from app.services.llm_service import llm_service
+import json
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -17,14 +18,12 @@ def chat(request: ChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing chat: {str(e)}")
 
-@router.post("/generate", response_model=ChatResponse)
+@router.post("/generate", response_model=TripPlan)
 def chat(request: TripRequest):
     try:
-        # TODO: Change return type
-        response = llm_service.chat(request.message)
-        return ChatResponse(
-            response=response,
-            user_id=request.user_id
+        response = llm_service.chat(f"Generate a trip plan with the following parameters: {json.dumps(request)}")
+        return TripRequest(
+            response=response
         )
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))

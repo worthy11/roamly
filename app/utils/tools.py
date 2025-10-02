@@ -32,54 +32,6 @@ def search_trips(query: str, top_k: int = 3) -> str:
     finally:
         db.close()
 
-@tool
-def plan_trip(destination: str, duration_days: int, budget: float, activity_level: str, preferences: str = ""
-) -> str:
-    """Plan a NEW custom trip itinerary. Use when users ask you to PLAN or CREATE a trip (not when searching existing trips)."""
-    from app.utils.prompts import get_trip_planning_prompt
-    
-    api_key = os.getenv("OPENAI_API_KEY")
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7, api_key=api_key)
-    
-    structured_llm = llm.with_structured_output(TripPlan)
-    prompt = get_trip_planning_prompt(destination, duration_days, budget, activity_level, preferences)
-    
-    try:
-        trip_plan = structured_llm.invoke(prompt)
-        
-        result = f"""# {trip_plan.destination} Trip Plan
-
-**Duration:** {trip_plan.duration_days}
-
----
-
-## 🚗 Travel
-
-{trip_plan.travel}
-
----
-
-## 🏨 Accommodation
-
-{trip_plan.accommodation}
-
----
-
-## 💰 Costs
-
-{trip_plan.costs}
-
----
-
-## 🎯 Attractions
-
-{trip_plan.attractions}
-"""
-        
-        return result
-    except Exception as e:
-        return f"Error planning trip: {str(e)}"
-
 def get_sql_tool():
     """Get SQL database tool for querying trip database."""
     from app.utils.prompts import SQL_TOOL_DESCRIPTION
@@ -129,55 +81,107 @@ def normalize_flight(offer):
     }
 
 @tool
-def search_flights():
-    name = "flight_search"
-    description = "Find flight offers between two cities on a given date."
+def search_transport(origin: str, destination: str, date: str, passengers: int, pref_type: str):
+    options = []
 
-    def _run(self, origin: str, destination: str, date: str, passengers: int = 1):
-        try:
-            resp = amadeus.shopping.flight_offers_search.get(
-                originLocationCode=origin,
-                destinationLocationCode=destination,
-                departureDate=date,
-                adults=passengers,
-                max=5
-            )
-            results = [normalize_flight(offer) for offer in resp.data]
-            return results
-        except ResponseError as e:
-            return {"error": str(e)}
+    if not pref_type or pref_type == "plane":
+        for flight in get_flights(origin, destination, date, passengers):
+            options.append(flight)
+        
+    if not options or not pref_type or pref_type == "train":
+        for train in get_trains(origin, destination, date, passengers):
+            options.append(train)
+
+    if not options or not pref_type or pref_type == "car":
+        for car in get_car_routes(origin, destination, date, passengers):
+            options.append(car)
+
+    top_k = select_top_transport(options)
+    return top_k
+
+def get_flights(origin: str, destination: str, date: str, passengers: int):
+    """Find flight offers between two cities on a given date."""
+
+    try:
+        resp = amadeus.shopping.flight_offers_search.get(
+            originLocationCode=origin,
+            destinationLocationCode=destination,
+            departureDate=date,
+            adults=passengers,
+            max=5
+        )
+        results = [normalize_flight(offer) for offer in resp.data]
+        return results
+    except ResponseError as e:
+        return {"error": str(e)}
 
     async def _arun(self, *args, **kwargs):
         raise NotImplementedError
 
-def search_trains():
-    name = "train_search"
-    description = "Find train connections."
-    def _run(self, origin, destination, date, passengers):
-        # Call DB/SNCF API
-        return [ {...}, {...} ]
+def get_trains(origin, destination, date, passengers):
+    return []
 
-def get_car_route():
-    name = "car_route"
-    description = "Find car route cost and duration."
-    def _run(self, origin, destination, passengers, vehicle):
-        # Call HERE/TollGuru
-        return [ {...} ]
-    
-def select_top_transport():
-    name = "transport_selector"
-    description = "Select cheapest, fastest, and most eco-friendly from transport options."
-    
-    def _run(self, options: list):
-        cheapest = min(options, key=lambda x: x["price"])
-        eco = min(options, key=lambda x: x["co2_kg"])
-        # fastest = min(options, key=lambda x: parse_duration(x["duration"]))
-        return {
-            "cheapest": cheapest,
-            "eco": eco,
-            # "fastest": fastest,
-        }
+def get_car_routes(origin, destination, date, passengers):
+    return []
 
+def select_top_transport(options: list):
+    """Select cheapest, fastest, and most eco-friendly from transport options."""
+
+    cheapest = min(options, key=lambda x: x["price"])
+    eco = min(options, key=lambda x: x["co2_kg"])
+    # fastest = min(options, key=lambda x: parse_duration(x["duration"]))
+    return {
+        "cheapest": cheapest,
+        "eco": eco,
+        # "fastest": fastest,
+    }
+
+@tool
+def structure_trip_plan(transport_options: dict, acc_options: dict, keypoints: dict) -> str:
+    """Plan a NEW custom trip itinerary. Use when users ask you to PLAN or CREATE a trip (not when searching existing trips)."""
+    from app.utils.prompts import get_trip_planning_prompt
+    
+    api_key = os.getenv("OPENAI_API_KEY")
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7, api_key=api_key)
+    
+    structured_llm = llm.with_structured_output(TripPlan)
+    prompt = get_trip_planning_prompt()
+    
+    try:
+        trip_plan = structured_llm.invoke(prompt)
+        
+        result = f"""# {trip_plan.destination} Trip Plan
+
+**Duration:** {trip_plan.duration_days}
+
+---
+
+## 🚗 Travel
+
+{trip_plan.travel}
+
+---
+
+## 🏨 Accommodation
+
+{trip_plan.accommodation}
+
+---
+
+## 💰 Costs
+
+{trip_plan.costs}
+
+---
+
+## 🎯 Attractions
+
+{trip_plan.attractions}
+"""
+        
+        return result
+    except Exception as e:
+        return f"Error planning trip: {str(e)}"
 @tool
 def search_hotels(city_code: str, check_in_date: str, check_out_date: str, adults: int = 1, radius: int = 5) -> str:
     """Search for hotels in a city using Amadeus API. Use when users need accommodation information.
