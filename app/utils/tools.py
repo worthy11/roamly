@@ -81,12 +81,22 @@ def normalize_flight(offer):
     }
 
 @tool
-def search_transport(origin: str, destination: str, date: str, passengers: int, pref_type: str):
+def search_transport(origin: str, destination: str, date: str, passengers: int, pref_type: str = "") -> str:
+    """Search for transport options (flights, trains, cars) and return best options.
+    
+    Args:
+        origin: Origin city IATA code
+        destination: Destination city IATA code
+        date: Travel date in YYYY-MM-DD format
+        passengers: Number of passengers
+        pref_type: Preferred transport type ('plane', 'train', 'car', or empty for all)
+    """
     options = []
 
     if not pref_type or pref_type == "plane":
-        for flight in get_flights(origin, destination, date, passengers):
-            options.append(flight)
+        flights = get_flights(origin, destination, date, passengers)
+        if flights and not isinstance(flights, dict):
+            options.extend(flights)
         
     if not options or not pref_type or pref_type == "train":
         for train in get_trains(origin, destination, date, passengers):
@@ -101,7 +111,6 @@ def search_transport(origin: str, destination: str, date: str, passengers: int, 
 
 def get_flights(origin: str, destination: str, date: str, passengers: int):
     """Find flight offers between two cities on a given date."""
-
     try:
         resp = amadeus.shopping.flight_offers_search.get(
             originLocationCode=origin,
@@ -119,21 +128,25 @@ def get_flights(origin: str, destination: str, date: str, passengers: int):
         raise NotImplementedError
 
 def get_trains(origin, destination, date, passengers):
+    """Get train options (placeholder for future implementation)."""
     return []
 
 def get_car_routes(origin, destination, date, passengers):
+    """Get car route options (placeholder for future implementation)."""
     return []
 
 def select_top_transport(options: list):
-    """Select cheapest, fastest, and most eco-friendly from transport options."""
-
-    cheapest = min(options, key=lambda x: x["price"])
-    eco = min(options, key=lambda x: x["co2_kg"])
-    # fastest = min(options, key=lambda x: parse_duration(x["duration"]))
+    """Select cheapest and most eco-friendly from transport options."""
+    if not options:
+        return {}
+    
+    cheapest = min(options, key=lambda x: x.get("price", float('inf')))
+    eco_options = [o for o in options if o.get("co2_kg")]
+    eco = min(eco_options, key=lambda x: x["co2_kg"]) if eco_options else None
+    
     return {
         "cheapest": cheapest,
         "eco": eco,
-        # "fastest": fastest,
     }
 
 @tool
@@ -182,6 +195,8 @@ def structure_trip_plan(transport_options: dict, acc_options: dict, keypoints: d
         return result
     except Exception as e:
         return f"Error planning trip: {str(e)}"
+
+
 @tool
 def search_hotels(city_code: str, check_in_date: str, check_out_date: str, adults: int = 1, radius: int = 5) -> str:
     """Search for hotels in a city using Amadeus API. Use when users need accommodation information.

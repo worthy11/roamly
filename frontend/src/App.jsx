@@ -49,7 +49,7 @@ function App() {
     setChat((prev) => [...prev, userMessage]);
 
     try {
-      const response = await fetch(`${API_BASE}/chat/`, {
+      const response = await fetch(`${API_BASE}/chat/text`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
