@@ -42,7 +42,7 @@ You have access to multiple tools:
    - Use when: users want to filter by budget, duration, country, activity level
    - Examples: "trips under $2000", "7-10 day trips in Italy"
 
-3. plan_trip - Create a NEW custom trip itinerary
+3. structure_trip_plan - Transform previous
    - Use when: users ask you to PLAN or CREATE a trip for them
    - Examples: "plan me a trip to Japan", "create an itinerary for Italy"
    - Returns: Detailed structured trip plan with daily itinerary
@@ -71,4 +71,3 @@ def get_chat_prompt() -> ChatPromptTemplate:
         ("user", "{input}"),
         MessagesPlaceholder(variable_name="agent_scratchpad"),
     ])
-
