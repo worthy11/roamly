@@ -112,18 +112,6 @@ class TripRequest(BaseModel):
     budget: Optional[float] = 1000
     keypoints: Optional[List[str]] = []
 
-class TripRequest(BaseModel):
-    start_location: str
-    destination: str
-    transport: str
-    num_people: int
-    start_date: str
-    end_date: str
-    activity_level: str
-    pop_density: str
-    budget: float
-    keypoints: List[str]
-
 class TripPlan(BaseModel):
     destination: str
     duration_days: str

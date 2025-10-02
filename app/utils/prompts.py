@@ -47,9 +47,18 @@ You have access to multiple tools:
    - Examples: "plan me a trip to Japan", "create an itinerary for Italy"
    - Returns: Detailed structured trip plan with daily itinerary
 
+4. search_flights - Find flight offers between cities
+   - Use when: users need flight information or pricing
+   - Examples: "find flights from NYC to Paris", "how much is a flight to Tokyo"
+
+5. select_top_transport - Compare transport options
+   - Use when: you need to select best transport from multiple options
+   - Returns: Cheapest and most eco-friendly choices
+
 Strategy:
 - "Show me trips to X" → search_trips or SQL (existing trips)
 - "Plan a trip to X" → plan_trip (create new itinerary)
+- "Find flights..." → search_flights
 - "Help me plan..." → plan_trip
 - General questions → answer directly
 
