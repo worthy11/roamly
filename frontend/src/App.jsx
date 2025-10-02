@@ -2,6 +2,7 @@ import Layout from "./components/Layout";
 import "./App.css";
 import { useState, useEffect } from "react";
 import { BsRobot } from "react-icons/bs";
+import { FaSuitcase } from "react-icons/fa";
 import {
   GoogleMap,
   LoadScript,
@@ -15,6 +16,19 @@ function App() {
   const [chat, setChat] = useState([]);
   const [trips, setTrips] = useState([]);
   const [selectedTrip, setSelectedTrip] = useState(null);
+
+  const [formData, setFormData] = useState({
+    from: "",
+    to: "",
+    transport: "",
+    people: "",
+    dateFrom: "",
+    dateTo: "",
+    activity: "",
+    population: "",
+    budget: "",
+    attractions: "",
+  });
 
   useEffect(() => {
     const fetchTrips = async () => {
@@ -30,14 +44,10 @@ function App() {
     fetchTrips();
   }, []);
 
-  const handleSend = (e) => {
-    e.preventDefault();
-    if (message.trim() === "") return;
-    setChat([...chat, { from: "user", text: message }]);
-    setMessage("");
-  };
+  const sendMessage = async (text) => {
+    const userMessage = { from: "user", text };
+    setChat((prev) => [...prev, userMessage]);
 
-  async function fetchResponse() {
     try {
       const response = await fetch(`${API_BASE}/chat/`, {
         method: "POST",
@@ -46,7 +56,7 @@ function App() {
         },
         body: JSON.stringify({
           user_id: 0,
-          message: message,
+          message: text,
         }),
       });
 
@@ -55,12 +65,44 @@ function App() {
       }
 
       const data = await response.json();
-      console.log(data.response);
+      const botMessage = { from: "bot", text: data.response };
+      setChat((prev) => [...prev, botMessage]);
     } catch (error) {
       console.error("Error fetching response:", error);
-      return { error: error.message };
+      setChat((prev) => [
+        ...prev,
+        { from: "bot", text: "Error: " + error.message },
+      ]);
     }
-  }
+  };
+
+  const handleSend = (e) => {
+    e.preventDefault();
+    if (message.trim() === "") return;
+    const currentMessage = message;
+    setMessage("");
+    sendMessage(currentMessage);
+  };
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    const text = `I am looking for a trip with the following details:
+Where from: ${formData.from}
+Where to: ${formData.to}
+Means of transport: ${formData.transport}
+Number of people: ${formData.people}
+From: ${formData.dateFrom} to ${formData.dateTo}
+Activity level: ${formData.activity}
+Population number: ${formData.population}
+Budget: ${formData.budget}
+Key attractions / points of interest: ${formData.attractions}`;
+    sendMessage(text);
+  };
 
   const center = {
     lat: 20,
@@ -93,7 +135,7 @@ function App() {
                     title={`${trip.country} - ${city.name}`}
                     icon={{
                       url: "http://maps.google.com/mapfiles/kml/pal4/icon49.png",
-                      scaledSize: new window.google.maps.Size(40, 40), // optional size
+                      scaledSize: new window.google.maps.Size(40, 40),
                     }}
                     onClick={() => setSelectedTrip({ trip, city })}
                   />
@@ -134,37 +176,116 @@ function App() {
           </LoadScript>
         </div>
 
-        <div className="chatbot-container">
-          <h2 className="chatbot-title">
-            Plan your next trip <BsRobot size={35} title="ChatBot" />
-          </h2>
-          <div className="chatbot-underline"></div>
-          <div className="chat-window">
-            {chat.length === 0 && (
-              <div className="chat-placeholder">No messages</div>
-            )}
-            {chat.map((msg, idx) => (
-              <div key={idx} className={`chat-message ${msg.from}`}>
-                {msg.text}
-              </div>
-            ))}
+        <div className="chat-form-wrapper">
+          <div className="chatbot-container">
+            <h2 className="chatbot-title">
+              Plan your next trip <BsRobot size={35} title="ChatBot" />
+            </h2>
+            <div className="chatbot-underline"></div>
+            <div className="chat-window">
+              {chat.length === 0 && (
+                <div className="chat-placeholder">No messages</div>
+              )}
+              {chat.map((msg, idx) => (
+                <div key={idx} className={`chat-message ${msg.from}`}>
+                  {msg.text}
+                </div>
+              ))}
+            </div>
+            <form className="chat-input-row" onSubmit={handleSend}>
+              <input
+                type="text"
+                placeholder="Send message..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                className="chat-input"
+              />
+              <button type="submit" className="chat-send-btn">
+                Send
+              </button>
+            </form>
           </div>
-          <form className="chat-input-row" onSubmit={handleSend}>
-            <input
-              type="text"
-              placeholder="Send message..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="chat-input"
-            />
-            <button
-              type="submit"
-              className="chat-send-btn"
-              onClick={fetchResponse}
-            >
-              Send
-            </button>
-          </form>
+          <div className="trip-form">
+            <h3 className="trip-form-title">
+            Travel sheet <FaSuitcase size={28} title="Trip Form" />
+            </h3>
+            <form onSubmit={handleFormSubmit} className="trip-form-fields">
+              <input
+                type="text"
+                name="from"
+                placeholder="Where from"
+                value={formData.from}
+                onChange={handleFormChange}
+              />
+              <input
+                type="text"
+                name="to"
+                placeholder="Where to"
+                value={formData.to}
+                onChange={handleFormChange}
+              />
+              <input
+                type="text"
+                name="transport"
+                placeholder="Prefered means of transport"
+                value={formData.transport}
+                onChange={handleFormChange}
+              />
+              <input
+                type="number"
+                name="people"
+                placeholder="Number of people"
+                value={formData.people}
+                onChange={handleFormChange}
+                min="1"
+              />
+              <label>Start date:</label>
+              <input
+                type="date"
+                name="dateFrom"
+                value={formData.dateFrom}
+                onChange={handleFormChange}
+              />
+              <label>End date:</label>
+              <input
+                type="date"
+                name="dateTo"
+                value={formData.dateTo}
+                onChange={handleFormChange}
+              />
+              <input
+                type="text"
+                name="activity"
+                placeholder="Activity level"
+                value={formData.activity}
+                onChange={handleFormChange}
+              />
+              <input
+                type="text"
+                name="population"
+                placeholder="Population level"
+                value={formData.population}
+                onChange={handleFormChange}
+              />
+              <input
+                type="number"
+                name="budget"
+                placeholder="Budget"
+                value={formData.budget}
+                onChange={handleFormChange}
+                min="0"
+              />
+              <textarea
+                name="attractions"
+                placeholder="Key attractions / points of interest"
+                value={formData.attractions}
+                onChange={handleFormChange}
+              ></textarea>
+              <button type="submit" className="chat-send-btn">
+                Send
+              </button>
+            </form>
+          </div>
         </div>
       </Layout>
     </>
