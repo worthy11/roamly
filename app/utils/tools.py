@@ -98,3 +98,82 @@ def get_sql_tool():
     
     return [t for t in sql_tools if t.name in ["sql_db_query", "sql_db_schema", "sql_db_list_tables"]]
 
+from amadeus import Client, ResponseError
+
+amadeus = Client(
+    client_id=os.getenv("AMADEUS_API_KEY"),
+    client_secret=os.getenv("AMADEUS_API_SECRET")
+)
+
+def normalize_flight(offer):
+    itinerary = offer["itineraries"][0]
+    segment = itinerary["segments"][0]
+    return {
+        "mode": "flight",
+        "provider": "Amadeus",
+        "price": float(offer["price"]["total"]),
+        "currency": offer["price"]["currency"],
+        "duration": itinerary["duration"],
+        "seats_available": offer.get("numberOfBookableSeats"),
+        "co2_kg": offer["travelerPricings"][0]
+            .get("fareDetailsBySegment", [{}])[0]
+            .get("co2Emissions", [{}])[0]
+            .get("weight", None),
+        "details": {
+            "airline": segment["carrierCode"],
+            "from": segment["departure"]["iataCode"],
+            "to": segment["arrival"]["iataCode"],
+            "departure": segment["departure"]["at"],
+            "arrival": segment["arrival"]["at"],
+        }
+    }
+
+@tool
+def search_flights():
+    name = "flight_search"
+    description = "Find flight offers between two cities on a given date."
+
+    def _run(self, origin: str, destination: str, date: str, passengers: int = 1):
+        try:
+            resp = amadeus.shopping.flight_offers_search.get(
+                originLocationCode=origin,
+                destinationLocationCode=destination,
+                departureDate=date,
+                adults=passengers,
+                max=5
+            )
+            results = [normalize_flight(offer) for offer in resp.data]
+            return results
+        except ResponseError as e:
+            return {"error": str(e)}
+
+    async def _arun(self, *args, **kwargs):
+        raise NotImplementedError
+
+def search_trains():
+    name = "train_search"
+    description = "Find train connections."
+    def _run(self, origin, destination, date, passengers):
+        # Call DB/SNCF API
+        return [ {...}, {...} ]
+
+def get_car_route():
+    name = "car_route"
+    description = "Find car route cost and duration."
+    def _run(self, origin, destination, passengers, vehicle):
+        # Call HERE/TollGuru
+        return [ {...} ]
+    
+def select_top_transport():
+    name = "transport_selector"
+    description = "Select cheapest, fastest, and most eco-friendly from transport options."
+    
+    def _run(self, options: list):
+        cheapest = min(options, key=lambda x: x["price"])
+        eco = min(options, key=lambda x: x["co2_kg"])
+        # fastest = min(options, key=lambda x: parse_duration(x["duration"]))
+        return {
+            "cheapest": cheapest,
+            "eco": eco,
+            # "fastest": fastest,
+        }

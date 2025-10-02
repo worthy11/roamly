@@ -20,8 +20,9 @@ class LLMService:
             api_key=api_key
         )
         
-        sql_tool = get_sql_tool()
-        self.tools = [search_trips, plan_trip] + sql_tool
+        sql_tool = tools.get_sql_tool()
+        transport_tool = [tools.search_flights, tools.select_top_transport]
+        self.tools = [tools.search_trips] + sql_tool + transport_tool
         self.prompt = get_chat_prompt()
         self.agent = create_tool_calling_agent(self.llm, self.tools, self.prompt)
         self.agent_executor = AgentExecutor(

@@ -102,6 +102,18 @@ class ChatResponse(BaseModel):
 
 class TripRequest(BaseModel):
     start_location: str
+    destination: Optional[str] = ""
+    transport: Optional[str] = ""
+    num_people: Optional[int] = 1
+    start_date: Optional[str] = ""
+    end_date: Optional[str] = ""
+    activity_level: Optional[str] = ""
+    pop_density: Optional[str] = "medium"
+    budget: Optional[float] = 1000
+    keypoints: Optional[List[str]] = []
+
+class TripRequest(BaseModel):
+    start_location: str
     destination: str
     transport: str
     num_people: int
