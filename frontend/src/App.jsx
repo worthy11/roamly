@@ -91,7 +91,7 @@ function App() {
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    const text = `I am looking for a trip with the following details:
+    const text = `I want to plan a trip with the following details:
 Where from: ${formData.from}
 Where to: ${formData.to}
 Means of transport: ${formData.transport}
