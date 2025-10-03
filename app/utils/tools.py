@@ -6,6 +6,7 @@ from app.services.vector_search_service import vector_search_service
 from app.database import SessionLocal
 from app.models import TripPlan
 import os
+import json
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -172,36 +173,22 @@ def format_trip_summary(destination: str, duration_days: int, transport_info: st
     try:
         trip_plan = structured_llm.invoke(prompt)
         
-        result = f"""# {trip_plan.destination} Trip Plan
+        # Return as JSON with a special marker for the service to parse
+        result = {
+            "structured_output": True,
+            "trip_plan": trip_plan.model_dump(),
+            "text_summary": f"""Trip to {trip_plan.destination} ({trip_plan.duration_days})
 
-**Duration:** {trip_plan.duration_days}
+🚗 Travel: {trip_plan.travel[:200]}...
 
----
+🏨 Accommodation: {trip_plan.accommodation[:200]}...
 
-## 🚗 Travel
+💰 Costs: {trip_plan.costs[:150]}...
 
-{trip_plan.travel}
-
----
-
-## 🏨 Accommodation
-
-{trip_plan.accommodation}
-
----
-
-## 💰 Costs
-
-{trip_plan.costs}
-
----
-
-## 🎯 Attractions
-
-{trip_plan.attractions}
-"""
+🎯 Attractions: {trip_plan.attractions[:200]}..."""
+        }
         
-        return result
+        return f"__STRUCTURED__{json.dumps(result)}__STRUCTURED__"
     except Exception as e:
         return f"Error planning trip: {str(e)}"
 
