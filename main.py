@@ -7,10 +7,6 @@ import os
 
 from app.routers import users, trips, chat
 
-import langchain
-
-langchain.debug = True
-
 app = FastAPI()
 app.include_router(users.router)
 app.include_router(trips.router)

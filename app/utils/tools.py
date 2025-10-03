@@ -6,6 +6,7 @@ from app.services.vector_search_service import vector_search_service
 from app.database import SessionLocal
 from app.models import TripPlan
 import os
+import json
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -172,50 +173,37 @@ def format_trip_summary(destination: str, duration_days: int, transport_info: st
     try:
         trip_plan = structured_llm.invoke(prompt)
         
-        result = f"""# {trip_plan.destination} Trip Plan
+        # Return as JSON with a special marker for the service to parse
+        result = {
+            "structured_output": True,
+            "trip_plan": trip_plan.model_dump(),
+            "text_summary": f"""Trip to {trip_plan.destination} ({trip_plan.duration_days})
 
-**Duration:** {trip_plan.duration_days}
+🚗 Travel: {trip_plan.travel[:200]}...
 
----
+🏨 Accommodation: {trip_plan.accommodation[:200]}...
 
-## 🚗 Travel
+💰 Costs: {trip_plan.costs[:150]}...
 
-{trip_plan.travel}
-
----
-
-## 🏨 Accommodation
-
-{trip_plan.accommodation}
-
----
-
-## 💰 Costs
-
-{trip_plan.costs}
-
----
-
-## 🎯 Attractions
-
-{trip_plan.attractions}
-"""
+🎯 Attractions: {trip_plan.attractions[:200]}..."""
+        }
         
-        return result
+        return f"__STRUCTURED__{json.dumps(result)}__STRUCTURED__"
     except Exception as e:
         return f"Error planning trip: {str(e)}"
 
 
 @tool
-def search_hotels(city_code: str, check_in_date: str, check_out_date: str, adults: int = 1, radius: int = 5) -> str:
+def search_hotels(city_code: str, check_in_date: str, check_out_date: str, adults: int = 2, room_quantity: int = 1, children: int = 0) -> str:
     """Search for hotels in a city using Amadeus API. Use when users need accommodation information.
     
     Args:
         city_code: IATA city code (e.g., 'NYC', 'PAR', 'LON')
         check_in_date: Check-in date in YYYY-MM-DD format
         check_out_date: Check-out date in YYYY-MM-DD format
-        adults: Number of adult guests (default: 1)
-        radius: Search radius in km (default: 5)
+        adults: Number of adult guests (default: 2)
+        room_quantity: Number of rooms needed (default: 1)
+        children: Number of child guests (default: 0)
     """
     try:
         # First, get hotel IDs in the city using hotel list API
@@ -229,41 +217,96 @@ def search_hotels(city_code: str, check_in_date: str, check_out_date: str, adult
         # Get hotel IDs (limit to first 50 for offer search)
         hotel_ids = [hotel['hotelId'] for hotel in hotel_list_response.data[:50]]
         
+        # Build API parameters
+        api_params = {
+            'hotelIds': ','.join(hotel_ids),
+            'checkInDate': check_in_date,
+            'checkOutDate': check_out_date,
+            'adults': adults,
+            'roomQuantity': room_quantity
+        }
+        
+        # Only add children parameter if > 0
+        if children > 0:
+            api_params['children'] = children
+        
         # Now search for offers using hotel IDs
-        response = amadeus.shopping.hotel_offers_search.get(
-            hotelIds=','.join(hotel_ids),
-            checkInDate=check_in_date,
-            checkOutDate=check_out_date,
-            adults=adults
-        )
+        response = amadeus.shopping.hotel_offers_search.get(**api_params)
         
         hotels = response.data[:10]
         
         if not hotels:
             return f"No hotel offers found in {city_code} for {check_in_date} to {check_out_date}."
         
-        output = f"Found {len(hotels)} hotel options in {city_code}:\n\n"
+        total_guests = adults + children
+        output = f"Found {len(hotels)} hotel options in {city_code} for {total_guests} guest(s) in {room_quantity} room(s):\n\n"
         
         for i, hotel in enumerate(hotels, 1):
-            name = hotel.get('hotel', {}).get('name', 'Unknown Hotel')
+            hotel_info = hotel.get('hotel', {})
+            name = hotel_info.get('name', 'Unknown Hotel')
             offers = hotel.get('offers', [])
             
             if offers:
                 offer = offers[0]
                 price = offer.get('price', {})
-                total = price.get('total', 'N/A')
+                total_price = price.get('total', 'N/A')
                 currency = price.get('currency', 'USD')
+                
+                # Room details
                 room = offer.get('room', {})
-                room_type = room.get('typeEstimated', {}).get('category', 'Standard')
-                beds = room.get('typeEstimated', {}).get('beds', 1)
+                room_type_est = room.get('typeEstimated', {})
+                room_category = room_type_est.get('category', 'Standard')
+                beds = room_type_est.get('beds', 1)
+                bed_type = room_type_est.get('bedType', 'Unknown')
+                
+                # Room description
+                room_description = room.get('description', {}).get('text', '')
+                
+                # Policies
+                policies = offer.get('policies', {})
+                cancellation = policies.get('cancellation', {})
+                cancellation_type = cancellation.get('type', 'N/A')
+                
+                # Guest info
+                guests = offer.get('guests', {})
+                adults_allowed = guests.get('adults', adults)
                 
                 output += f"{i}. {name}\n"
-                output += f"   Price: {total} {currency} per stay\n"
-                output += f"   Room: {room_type} ({beds} bed(s))\n"
                 
-                rating = hotel.get('hotel', {}).get('rating')
+                # Rating
+                rating = hotel_info.get('rating')
                 if rating:
                     output += f"   Rating: {rating} stars\n"
+                
+                # Price info
+                output += f"   Price: {total_price} {currency}"
+                if room_quantity > 1:
+                    try:
+                        per_room = float(total_price) / room_quantity
+                        output += f" total ({per_room:.2f} {currency} per room)"
+                    except:
+                        pass
+                output += "\n"
+                
+                # Room details
+                output += f"   Room: {room_category} - {beds} {bed_type} bed(s)\n"
+                output += f"   Capacity: Up to {adults_allowed} adults per room\n"
+                
+                # Room description if available
+                if room_description:
+                    desc_short = room_description[:100] + "..." if len(room_description) > 100 else room_description
+                    output += f"   Description: {desc_short}\n"
+                
+                # Cancellation policy
+                if cancellation_type != 'N/A':
+                    output += f"   Cancellation: {cancellation_type}\n"
+                
+                # Hotel address if available
+                address = hotel_info.get('address', {})
+                if address:
+                    city_name = address.get('cityName', '')
+                    if city_name:
+                        output += f"   Location: {city_name}\n"
                 
                 output += "\n"
             else:

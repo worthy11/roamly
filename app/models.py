@@ -96,9 +96,18 @@ class ChatRequest(BaseModel):
     user_id: int
     message: str
 
+class TripPlan(BaseModel):
+    destination: str
+    duration_days: str
+    travel: str
+    accommodation: str
+    costs: str
+    attractions: str
+
 class ChatResponse(BaseModel):
     response: str
     user_id: int
+    trip_plan: Optional[TripPlan] = None
 
 class TripRequest(BaseModel):
     start_location: str
@@ -111,11 +120,3 @@ class TripRequest(BaseModel):
     pop_density: Optional[str] = "medium"
     budget: Optional[float] = 1000
     keypoints: Optional[List[str]] = []
-
-class TripPlan(BaseModel):
-    destination: str
-    duration_days: str
-    travel: str
-    accommodation: str
-    costs: str
-    attractions: str

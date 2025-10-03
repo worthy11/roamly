@@ -8,10 +8,11 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 @router.post("/text", response_model=ChatResponse)
 def chat(request: ChatRequest):
     try:
-        response = llm_service.chat(request.message)
+        response_text, trip_plan = llm_service.chat(request.message)
         return ChatResponse(
-            response=response,
-            user_id=request.user_id
+            response=response_text,
+            user_id=request.user_id,
+            trip_plan=trip_plan
         )
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -21,10 +22,12 @@ def chat(request: ChatRequest):
 @router.post("/generate", response_model=TripPlan)
 def chat(request: TripRequest):
     try:
-        response = llm_service.chat(f"Generate a trip plan with the following parameters: {json.dumps(request)}")
-        return TripRequest(
-            response=response
-        )
+        response_text, trip_plan = llm_service.chat(f"Generate a trip plan with the following parameters: {json.dumps(request.model_dump())}")
+        
+        if trip_plan:
+            return trip_plan
+        else:
+            raise HTTPException(status_code=500, detail="Failed to generate structured trip plan")
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
