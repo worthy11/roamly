@@ -14,21 +14,27 @@ Examples:
 - Country: SELECT * FROM trips WHERE country LIKE '%Italy%'
 - Combined: SELECT * FROM trips WHERE budget < 2500 AND duration >= 7"""
 
-def get_trip_planning_prompt(destination: str, duration_days: int, budget: float, activity_level: str, preferences: str) -> str:
-    return f"""Create a detailed trip plan for:
-    
+def get_trip_summary_prompt(destination: str, duration_days: int, transport_info: str, hotel_info: str, preferences: str = "") -> str:
+    return f"""Format the following trip search results into a structured summary:
+
 Destination: {destination}
 Duration: {duration_days} days
-Budget: ${budget}
-Activity Level: {activity_level}
-Preferences: {preferences}
+User Preferences: {preferences}
 
-Structure the plan with exactly these 4 text sections:
+TRANSPORT OPTIONS FOUND:
+{transport_info}
 
-1. travel (string): Describe transportation, routes, travel times, and tips
-2. accommodation (string): Describe suggested areas, types, costs, and booking tips
-3. costs (string): Provide detailed cost breakdown with totals
-4. attractions (string): List and describe attractions with time needed and costs"""
+ACCOMMODATION OPTIONS FOUND:
+{hotel_info}
+
+Create a formatted summary with exactly these sections:
+
+1. destination (string): The destination name
+2. duration_days (string): Trip duration
+3. travel (string): Summarize the transport options found, highlighting the best choices with prices and times
+4. accommodation (string): Summarize the hotel options found, highlighting good value options with prices and locations
+5. costs (string): Calculate and present total estimated costs based on the actual prices from transport and hotels
+6. attractions (string): Based on the destination, suggest key attractions and activities to visit"""
 
 TRAVEL_ASSISTANT_SYSTEM_MESSAGE = """You are a helpful travel assistant. You help users find their perfect trip.
 
@@ -61,6 +67,7 @@ Strategy:
 - "Show me trips to X" → search_trips or SQL (existing trips)
 - "Find flights/transport..." → search_transport
 - "Find hotels..." → search_hotels
+- "Plan a trip to X" → First search_transport, then search_hotels, then format_trip_summary
 - General questions → answer directly
 
 For trip planning requests you should use the tools in the following order:

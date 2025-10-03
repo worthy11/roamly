@@ -2,7 +2,7 @@ from langchain_openai import ChatOpenAI
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from typing import List, Dict
 from app.utils.prompts import get_chat_prompt
-from app.utils.tools import search_trips, get_sql_tool, structure_trip_plan, search_transport, search_hotels
+from app.utils.tools import search_trips, get_sql_tool, format_trip_summary, search_transport, search_hotels
 import os
 from dotenv import load_dotenv
 
@@ -21,7 +21,7 @@ class LLMService:
         )
         
         sql_tool = get_sql_tool()
-        self.tools = [search_trips, structure_trip_plan, search_transport, search_hotels] + sql_tool
+        self.tools = [search_trips, format_trip_summary, search_transport, search_hotels] + sql_tool
         self.prompt = get_chat_prompt()
         self.agent = create_tool_calling_agent(self.llm, self.tools, self.prompt)
         self.agent_executor = AgentExecutor(

@@ -150,15 +150,24 @@ def select_top_transport(options: list):
     }
 
 @tool
-def structure_trip_plan(transport_options: dict, acc_options: dict, keypoints: dict) -> str:
-    """Plan a NEW custom trip itinerary. Use when users ask you to PLAN or CREATE a trip (not when searching existing trips)."""
-    from app.utils.prompts import get_trip_planning_prompt
+def format_trip_summary(destination: str, duration_days: int, transport_info: str, hotel_info: str, preferences: str = "") -> str:
+    """Format transport and hotel search results into a structured trip summary. 
+    Use ONLY after you have already called search_transport AND search_hotels.
+    
+    Args:
+        destination: The destination city or country
+        duration_days: Number of days for the trip
+        transport_info: The complete output string from search_transport tool
+        hotel_info: The complete output string from search_hotels tool
+        preferences: Additional user preferences or requirements
+    """
+    from app.utils.prompts import get_trip_summary_prompt
     
     api_key = os.getenv("OPENAI_API_KEY")
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7, api_key=api_key)
     
     structured_llm = llm.with_structured_output(TripPlan)
-    prompt = get_trip_planning_prompt()
+    prompt = get_trip_summary_prompt(destination, duration_days, transport_info, hotel_info, preferences)
     
     try:
         trip_plan = structured_llm.invoke(prompt)
@@ -209,21 +218,29 @@ def search_hotels(city_code: str, check_in_date: str, check_out_date: str, adult
         radius: Search radius in km (default: 5)
     """
     try:
+        # First, get hotel IDs in the city using hotel list API
+        hotel_list_response = amadeus.reference_data.locations.hotels.by_city.get(
+            cityCode=city_code
+        )
+        
+        if not hotel_list_response.data:
+            return f"No hotels found in {city_code}."
+        
+        # Get hotel IDs (limit to first 50 for offer search)
+        hotel_ids = [hotel['hotelId'] for hotel in hotel_list_response.data[:50]]
+        
+        # Now search for offers using hotel IDs
         response = amadeus.shopping.hotel_offers_search.get(
-            cityCode=city_code,
+            hotelIds=','.join(hotel_ids),
             checkInDate=check_in_date,
             checkOutDate=check_out_date,
-            adults=adults,
-            radius=radius,
-            radiusUnit='KM',
-            ratings=['3', '4', '5'],
-            bestRateOnly=True
+            adults=adults
         )
         
         hotels = response.data[:10]
         
         if not hotels:
-            return f"No hotels found in {city_code} for {check_in_date} to {check_out_date}."
+            return f"No hotel offers found in {city_code} for {check_in_date} to {check_out_date}."
         
         output = f"Found {len(hotels)} hotel options in {city_code}:\n\n"
         
@@ -255,7 +272,11 @@ def search_hotels(city_code: str, check_in_date: str, check_out_date: str, adult
         return output
     
     except ResponseError as e:
-        return f"Error searching hotels: {str(e)}"
+        error_details = f"Amadeus API Error: {e.response.status_code}\n"
+        error_details += f"Description: {e.description}\n"
+        if hasattr(e, 'response') and hasattr(e.response, 'body'):
+            error_details += f"Details: {e.response.body}"
+        return f"Error searching hotels: {error_details}"
     except Exception as e:
         return f"Error: {str(e)}"
     
