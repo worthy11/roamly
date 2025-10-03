@@ -212,7 +212,7 @@ Key attractions / points of interest: ${formData.attractions}`;
           </div>
           <div className="trip-form">
             <h3 className="trip-form-title">
-            Travel sheet <FaSuitcase size={28} title="Trip Form" />
+              Travel sheet <FaSuitcase size={28} title="Trip Form" />
             </h3>
             <form onSubmit={handleFormSubmit} className="trip-form-fields">
               <input

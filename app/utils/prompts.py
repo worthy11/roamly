@@ -67,9 +67,8 @@ You have access to multiple tools:
    - Examples: "find hotels in Paris for 4 people", "where should I stay in Tokyo with 2 adults and 1 child"
    - Returns: List of hotels with prices (total and per room), ratings, room details, capacity, descriptions, and cancellation policies
 
-5. structure_trip_plan - Transform previous
-    - Use when: users ask you to PLAN or CREATE a trip for them and you have the transport and hotel options
-    - Examples: "plan me a trip to Japan", "create an itinerary for Italy"
+5. structure_trip_plan - Transform outputs from previous tools
+    - Use when: you have finished planning a trip and are returning the created plan. Do not call this tool without previous tool calls.
     - Returns: Detailed structured trip plan with daily itinerary
 
 Strategy:
