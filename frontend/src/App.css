@@ -395,6 +395,48 @@
   word-break: break-word;
 }
 
+/* Markdown content styling */
+.trip-plan-box-content strong {
+  font-weight: bold;
+  color: #2d4238;
+}
+
+.trip-plan-box-content em {
+  font-style: italic;
+  color: #e6b474;
+}
+
+.trip-plan-box-content h3 {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin: 0.5rem 0 0.3rem 0;
+  color: #2d4238;
+  border-bottom: 1px solid #e6b474;
+  padding-bottom: 0.2rem;
+}
+
+.trip-plan-box-content h4 {
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 0.4rem 0 0.2rem 0;
+  color: #2d4238;
+}
+
+.trip-plan-box-content li {
+  margin: 0.2rem 0;
+  padding-left: 0.5rem;
+}
+
+.trip-plan-box-content ul {
+  margin: 0.3rem 0;
+  padding-left: 1rem;
+}
+
+.trip-plan-box-content ol {
+  margin: 0.3rem 0;
+  padding-left: 1rem;
+}
+
 .transport-box {
   border-left: 4px solid #4CAF50;
 }
