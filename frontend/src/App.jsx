@@ -1,4 +1,5 @@
 import Layout from "./components/Layout";
+import TripPlanContainer from "./components/TripPlanContainer";
 import "./App.css";
 import { useState, useEffect } from "react";
 import { BsRobot } from "react-icons/bs";
@@ -16,6 +17,12 @@ function App() {
   const [chat, setChat] = useState([]);
   const [trips, setTrips] = useState([]);
   const [selectedTrip, setSelectedTrip] = useState(null);
+  const [tripPlan, setTripPlan] = useState({
+    transport: null,
+    accommodation: null,
+    plan: null,
+    isGenerating: false
+  });
 
   const [formData, setFormData] = useState({
     from: "",
@@ -106,39 +113,94 @@ function App() {
       Population number: ${formData.population}
       Budget: ${formData.budget}
       Key attractions / points of interest: ${formData.attractions}`;
-    sendMessage(text);
-
-    const response = await fetch(`${API_BASE}/chat/generate`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        user_id: 0,
-        message: text,
-      }),
+    
+    // Add user message to chat
+    const userMessage = { from: "user", text };
+    setChat((prev) => [...prev, userMessage]);
+    
+    // Reset trip plan and start generating
+    setTripPlan({
+      transport: null,
+      accommodation: null,
+      plan: null,
+      isGenerating: true
     });
 
-    if (!response.ok) {
-      console.error("Server error", response.status);
-      return;
-    }
+    try {
+      const response = await fetch(`${API_BASE}/chat/generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: 0,
+          message: text,
+        }),
+      });
 
-    const es = response.body
-      ? new ReadableStream({
-          async start(controller) {
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              const chunk = decoder.decode(value);
-              console.log("Received chunk:", chunk);
+      if (!response.ok) {
+        console.error("Server error", response.status);
+        setTripPlan(prev => ({ ...prev, isGenerating: false }));
+        return;
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') {
+              setTripPlan(prev => ({ ...prev, isGenerating: false }));
+              break;
             }
-            controller.close();
-          },
-        })
-      : null;
+            
+            try {
+              const parsed = JSON.parse(data);
+              const { stage, result } = parsed;
+              
+              // Extract the actual output text from the agent response object
+              const extractOutput = (agentResult) => {
+                if (typeof agentResult === 'string') {
+                  return agentResult;
+                }
+                if (agentResult && typeof agentResult === 'object') {
+                  // If it has an 'output' field, use that
+                  if (agentResult.output) {
+                    return agentResult.output;
+                  }
+                  // If it's an object without 'output', stringify it
+                  return JSON.stringify(agentResult);
+                }
+                return String(agentResult);
+              };
+              
+              const outputText = extractOutput(result);
+              
+              if (stage === 'transport') {
+                setTripPlan(prev => ({ ...prev, transport: outputText }));
+              } else if (stage === 'accommodation') {
+                setTripPlan(prev => ({ ...prev, accommodation: outputText }));
+              } else if (stage === 'plan') {
+                setTripPlan(prev => ({ ...prev, plan: outputText }));
+              }
+            } catch (e) {
+              console.error("Error parsing chunk:", e);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error during trip generation:", error);
+      setTripPlan(prev => ({ ...prev, isGenerating: false }));
+    }
   };
 
   const center = {
@@ -230,6 +292,9 @@ function App() {
                   {msg.text}
                 </div>
               ))}
+              
+              {/* Trip Plan Display */}
+              <TripPlanContainer tripPlan={tripPlan} />
             </div>
             <form className="chat-input-row" onSubmit={handleSend}>
               <input
