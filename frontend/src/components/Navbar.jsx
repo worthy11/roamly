@@ -12,7 +12,12 @@ function Navbar() {
       <div className="navbar-links">
         <Link to="/"><AiFillHome size={30} title="Home" /></Link>
         <Link to="/travels"><FaPlaneDeparture size={30} title="Travels" /></Link>
-        <Link to="/chat"><BsRobot size={30} title="ChatBot" /></Link>
+            <button 
+      onClick={() => window.location.href = '/travels'} 
+      className="button-navbar"
+    >
+      Add a new trip
+    </button>
       </div>
     </nav>
   );

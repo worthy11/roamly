@@ -39,3 +39,21 @@
 .navbar a:hover {
   color: #f9a826;
 }
+
+.button-navbar {
+  background: #e6b474;
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  padding: 0.7em 1.2em;
+  font-size: 17px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-weight: bold;
+}
+
+.button-navbar:hover {
+  background-color: #b07d3b;
+  color: #fff;
+}
+

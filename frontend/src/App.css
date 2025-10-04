@@ -236,7 +236,8 @@
 .trip-form-fields textarea:focus,
 .trip-form-fields select:focus {
   outline: none;
-  border-color: #d48b59;
+  border-color: #d7ab75;
+  box-shadow: 0 0 0 2px #d7ab75;
   background-color: rgba(107, 123, 139, 0.85);
 }
 
