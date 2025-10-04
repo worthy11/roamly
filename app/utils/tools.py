@@ -8,6 +8,8 @@ from app.models import TripPlan
 import os
 import json
 from dotenv import load_dotenv
+from tavily import TavilyClient
+
 
 load_dotenv()
 
@@ -328,3 +330,19 @@ def search_hotels(city_code: str, check_in_date: str, check_out_date: str, adult
     except Exception as e:
         return f"Error: {str(e)}"
     
+
+@tool
+def web_search(query: str) -> str:
+    """Search the web for information using the Tavily API.
+    
+    Args:
+        query: The search query
+    """
+    tavily_api_key = os.getenv("TAVILY_API_KEY")
+    if not tavily_api_key:
+        return "Error: TAVILY_API_KEY not configured"
+    
+    tavily_client = TavilyClient(api_key=tavily_api_key)
+    results = tavily_client.search(query, max_results=5)
+    summary = "\n".join([r["title"] + ": " + r["url"] for r in results["results"]])
+    return f"Search results for '{query}':\n{summary}"

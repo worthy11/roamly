@@ -2,7 +2,7 @@ from langchain_openai import ChatOpenAI
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from typing import List, Dict, Optional, Tuple
 from app.utils.prompts import get_chat_prompts
-from app.utils.tools import search_trips, get_sql_tool, format_trip_summary, search_transport, search_hotels
+from app.utils.tools import search_trips, get_sql_tool, format_trip_summary, search_transport, search_hotels, web_search
 from app.models import TripPlan
 import os
 import json
@@ -14,14 +14,18 @@ load_dotenv(override=True)
 
 class LLMService:
     def __init__(self):
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        tavily_api_key = os.getenv("TAVILY_API_KEY")
+        if not openai_api_key:
             raise ValueError("OPENAI_API_KEY not found in .env file")
+        if not tavily_api_key:
+            raise ValueError("TAVILY_API_KEY not found in .env file")
         
+
         self.llm = ChatOpenAI(
             model="gpt-4o-mini",
             temperature=0.7,
-            api_key=api_key
+            api_key=openai_api_key
         )
 
         self.prompts = get_chat_prompts()
@@ -29,7 +33,7 @@ class LLMService:
         sql_tools = get_sql_tool()
         transport_tools = [search_transport]
         accommodation_tools = [search_hotels]
-        planning_tools = [format_trip_summary]
+        planning_tools = [format_trip_summary, web_search]
         common_tools = sql_tools + [search_trips]
 
         self.agents = {
