@@ -23,7 +23,6 @@ function TripForm({ onSubmit }) {
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    // Pass the form data object directly to the parent
     onSubmit(formData);
   };
 
@@ -32,6 +31,7 @@ function TripForm({ onSubmit }) {
       <h3 className="trip-form-title">
         Travel sheet <FaSuitcase size={28} title="Trip Form" />
       </h3>
+
       <form onSubmit={handleFormSubmit} className="trip-form-fields">
         <input
           type="text"
@@ -47,13 +47,18 @@ function TripForm({ onSubmit }) {
           value={formData.to}
           onChange={handleFormChange}
         />
-        <input
-          type="text"
+
+        <select
           name="transport"
-          placeholder="Prefered means of transport"
           value={formData.transport}
           onChange={handleFormChange}
-        />
+        >
+          <option value="">Select transport</option>
+          <option value="plane">Plane ✈️</option>
+          <option value="train">Transit 🚆</option>
+          <option value="bus">Bus 🚌</option>
+        </select>
+
         <input
           type="number"
           name="people"
@@ -62,6 +67,7 @@ function TripForm({ onSubmit }) {
           onChange={handleFormChange}
           min="1"
         />
+
         <label>Start date:</label>
         <input
           type="date"
@@ -69,6 +75,7 @@ function TripForm({ onSubmit }) {
           value={formData.dateFrom}
           onChange={handleFormChange}
         />
+
         <label>End date:</label>
         <input
           type="date"
@@ -76,20 +83,7 @@ function TripForm({ onSubmit }) {
           value={formData.dateTo}
           onChange={handleFormChange}
         />
-        <input
-          type="text"
-          name="activity"
-          placeholder="Activity level"
-          value={formData.activity}
-          onChange={handleFormChange}
-        />
-        <input
-          type="text"
-          name="population"
-          placeholder="Population level"
-          value={formData.population}
-          onChange={handleFormChange}
-        />
+
         <input
           type="number"
           name="budget"
@@ -98,12 +92,36 @@ function TripForm({ onSubmit }) {
           onChange={handleFormChange}
           min="0"
         />
+
+        <select
+          name="activity"
+          value={formData.activity}
+          onChange={handleFormChange}
+        >
+          <option value="">Select activity level</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+
+        <select
+          name="population"
+          value={formData.population}
+          onChange={handleFormChange}
+        >
+          <option value="">Select population level</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+
         <textarea
           name="attractions"
           placeholder="Key attractions / points of interest"
           value={formData.attractions}
           onChange={handleFormChange}
         ></textarea>
+
         <button type="submit" className="trip-form-submit">
           Send
         </button>
@@ -113,3 +131,4 @@ function TripForm({ onSubmit }) {
 }
 
 export default TripForm;
+
