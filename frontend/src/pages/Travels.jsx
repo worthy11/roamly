@@ -1,16 +1,17 @@
 import Layout from "../components/Layout";
 import { useState } from "react";
 import { API_BASE } from "../config";
-import "./Travels.css";
+import styles from "./Travels.module.css";
 
 function Travel() {
   const [country, setCountry] = useState("");
   const [description, setDescription] = useState("");
-  const [duration, setDuration] = useState(1);
-  const [numPeople, setNumPeople] = useState(1);
+  const [duration, setDuration] = useState("");
+  const [numPeople, setNumPeople] = useState("");
   const [activityLevel, setActivityLevel] = useState("");
-  const [budget, setBudget] = useState(1000);
+  const [budget, setBudget] = useState("");
   const [cities, setCities] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,19 +37,28 @@ function Travel() {
 
     const data = await res.json();
     console.log("Created trip:", data);
+      setCountry("");
+      setDescription("");
+      setDuration("");
+      setNumPeople("");
+      setActivityLevel("");
+      setBudget("");
+      setCities("");
   };
+
+
 
   return (
     <Layout>
-      <div className="trip-form">
-        <h1 className="trip-form-title">Create a new Trip</h1>
-        <form className="trip-form-fields" onSubmit={handleSubmit}>
+      <div className={styles.tripForm}>
+        <h1 className={styles.tripFormTitle}>Create a new Trip</h1>
+        <form className={styles.tripFormFields} onSubmit={handleSubmit}>
           <input placeholder="Country" value={country} onChange={e => setCountry(e.target.value)} required />
           <input placeholder="Description" value={description} onChange={e => setDescription(e.target.value)} />
-          <input type="number" placeholder="Duration (days)" value={duration} onChange={e => setDuration(e.target.value)} />
-          <input type="number" placeholder="Number of People" value={numPeople} onChange={e => setNumPeople(e.target.value)} />
+          <input type="number" placeholder="Duration (days)" value={duration} onChange={e => setDuration(e.target.value)} min="1" />
+          <input type="number" placeholder="Number of People" value={numPeople} onChange={e => setNumPeople(e.target.value)} min="1" />
           <input placeholder="Activity Level" value={activityLevel} onChange={e => setActivityLevel(e.target.value)} />
-          <input type="number" placeholder="Budget" value={budget} onChange={e => setBudget(e.target.value)} />
+          <input type="number" placeholder="Budget" value={budget} onChange={e => setBudget(e.target.value)} min="1"/>
           <input placeholder="Cities (comma separated)" value={cities} onChange={e => setCities(e.target.value)} />
           <button type="submit">Create Trip</button>
         </form>

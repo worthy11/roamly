@@ -1,0 +1,80 @@
+
+.tripForm {
+  width: 100%;              
+  max-width: 900px;        
+  padding: 20px;
+  border: 2px solid #2d4238;
+  border-radius: 30px;
+  background: rgba(147, 165, 183, 0.85);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+
+}
+
+.tripFormFields {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; 
+  width: 400px;
+  margin: 0 auto;
+  
+}
+
+.tripFormFields label {
+  margin-bottom: 5px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #F6EEE8;  
+  align-self: flex-start;
+}
+
+.tripFormFields input,
+.tripFormFields textarea,
+.tripFormFields select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #2d4238;
+  font-size: 14px;
+  background-color: rgb(168, 189, 209);
+  color: #F6EEE8;
+}
+
+.tripFormFields input:focus,
+.tripFormFields textarea:focus,
+.tripFormFields select:focus {
+  outline: none;
+  border-color: #d7ab75;
+  box-shadow: 0 0 0 2px #d7ab75;
+  background-color: rgba(107, 123, 139, 0.85);
+}
+
+.tripFormFields {
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+}
+
+.tripFormTitle {
+  display: flex;
+  align-items: center;
+  justify-content: center; 
+  gap: 2rem;
+  margin-bottom: 15px;
+  color: #333;
+  color: #F6EEE8;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: 1.7rem;
+  font-weight: 600;
+}
+
+.tripFormFields button {
+  background: #e6b474;
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  padding: 0.7em 1.2em;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-weight: bold;
+}

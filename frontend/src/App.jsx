@@ -7,7 +7,7 @@ import {
   GoogleMap,
   LoadScript,
   MarkerF,
-  InfoWindowF,
+  InfoBox,
 } from "@react-google-maps/api";
 import { API_BASE } from "./config";
 
@@ -67,7 +67,7 @@ function App() {
       const data = await response.json();
       const botMessage = { from: "bot", text: data.response };
       setChat((prev) => [...prev, botMessage]);
-      
+
       // Log structured trip plan to console if available
       if (data.trip_plan) {
         console.log(data.trip_plan);
@@ -94,19 +94,51 @@ function App() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     const text = `I want to plan a trip with the following details:
-Where from: ${formData.from}
-Where to: ${formData.to}
-Means of transport: ${formData.transport}
-Number of people: ${formData.people}
-From: ${formData.dateFrom} to ${formData.dateTo}
-Activity level: ${formData.activity}
-Population number: ${formData.population}
-Budget: ${formData.budget}
-Key attractions / points of interest: ${formData.attractions}`;
+      Where from: ${formData.from}
+      Where to: ${formData.to}
+      Means of transport: ${formData.transport}
+      Number of people: ${formData.people}
+      From: ${formData.dateFrom} to ${formData.dateTo}
+      Activity level: ${formData.activity}
+      Population number: ${formData.population}
+      Budget: ${formData.budget}
+      Key attractions / points of interest: ${formData.attractions}`;
     sendMessage(text);
+
+    const response = await fetch(`${API_BASE}/chat/generate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_id: 0,
+        message: text,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("Server error", response.status);
+      return;
+    }
+
+    const es = response.body
+      ? new ReadableStream({
+          async start(controller) {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              const chunk = decoder.decode(value);
+              console.log("Received chunk:", chunk);
+            }
+            controller.close();
+          },
+        })
+      : null;
   };
 
   const center = {
@@ -148,34 +180,36 @@ Key attractions / points of interest: ${formData.attractions}`;
               )}
 
               {selectedTrip && (
-                <InfoWindowF
-                  position={{
-                    lat: selectedTrip.city.lat,
-                    lng: selectedTrip.city.lon,
-                  }}
-                  onCloseClick={() => setSelectedTrip(null)}
-                >
-                  <div className="info-window">
-                    <h3>
-                      {selectedTrip.city.name}, {selectedTrip.trip.country}
-                    </h3>
-                    {selectedTrip.trip.description && (
-                      <p>{selectedTrip.trip.description}</p>
-                    )}
-                    {selectedTrip.trip.duration && (
-                      <p>Duration: {selectedTrip.trip.duration} days</p>
-                    )}
-                    {selectedTrip.trip.budget && (
-                      <p>Budget: ${selectedTrip.trip.budget}</p>
-                    )}
-                    {selectedTrip.trip.num_people && (
-                      <p>People: {selectedTrip.trip.num_people}</p>
-                    )}
-                    {selectedTrip.trip.activity_level && (
-                      <p>Activity: {selectedTrip.trip.activity_level}</p>
-                    )}
-                  </div>
-                </InfoWindowF>
+                <InfoBox
+  position={{
+    lat: selectedTrip.city.lat,
+    lng: selectedTrip.city.lon,
+  }}
+  options={{
+    closeBoxURL: "", // disables default close
+    enableEventPropagation: true,
+    pixelOffset: new window.google.maps.Size(-120, -50), // adjust if needed
+  }}
+>
+  <div className="info-window" style={{ position: "relative" }}>
+    {/* Custom close button */}
+    <button
+      className="info-close-btn"
+      onClick={() => setSelectedTrip(null)}
+    >
+      ×
+    </button>
+
+    <h3>
+      {selectedTrip.city.name}, {selectedTrip.trip.country}
+    </h3>
+    {selectedTrip.trip.description && <p>{selectedTrip.trip.description}</p>}
+    {selectedTrip.trip.duration && <p><span>Duration:</span> {selectedTrip.trip.duration} days</p>}
+    {selectedTrip.trip.budget && <p><span>Budget:</span> ${selectedTrip.trip.budget}</p>}
+    {selectedTrip.trip.num_people && <p><span>People:</span> {selectedTrip.trip.num_people}</p>}
+    {selectedTrip.trip.activity_level && <p><span>Activity:</span> {selectedTrip.trip.activity_level}</p>}
+  </div>
+</InfoBox>
               )}
             </GoogleMap>
           </LoadScript>
@@ -212,7 +246,7 @@ Key attractions / points of interest: ${formData.attractions}`;
           </div>
           <div className="trip-form">
             <h3 className="trip-form-title">
-            Travel sheet <FaSuitcase size={28} title="Trip Form" />
+              Travel sheet <FaSuitcase size={28} title="Trip Form" />
             </h3>
             <form onSubmit={handleFormSubmit} className="trip-form-fields">
               <input
