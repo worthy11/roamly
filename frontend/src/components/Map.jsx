@@ -1,4 +1,4 @@
-import { GoogleMap, LoadScript, MarkerF, InfoWindowF } from "@react-google-maps/api";
+import { GoogleMap, LoadScript, MarkerF, InfoBox } from "@react-google-maps/api";
 import './Map.css';
 
 function Map({ trips, selectedTrip, setSelectedTrip }) {
@@ -39,7 +39,7 @@ function Map({ trips, selectedTrip, setSelectedTrip }) {
           )}
 
           {selectedTrip && (
-            <InfoWindowF
+            <InfoBox
               position={{
                 lat: selectedTrip.city.lat,
                 lng: selectedTrip.city.lon,
@@ -66,7 +66,7 @@ function Map({ trips, selectedTrip, setSelectedTrip }) {
                   <p>Activity: {selectedTrip.trip.activity_level}</p>
                 )}
               </div>
-            </InfoWindowF>
+            </InfoBox>
           )}
         </GoogleMap>
       </LoadScript>
