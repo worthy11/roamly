@@ -1,4 +1,4 @@
-import { MarkdownRenderer } from '../utils/markdownUtils';
+import { MarkdownRenderer } from '../utils/markdownUtils.jsx';
 
 const TripPlanBox = ({ type, title, content, icon }) => {
   if (!content) return null;

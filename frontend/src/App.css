@@ -424,6 +424,22 @@
   color: #2d4238;
 }
 
+.trip-plan-box-content h5 {
+  font-size: 0.9rem;
+  font-weight: bold;
+  margin: 0.3rem 0 0.1rem 0;
+  color: #2d4238;
+}
+
+.trip-plan-box-content p {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.trip-plan-box-content p:has(•) {
+  margin-left: 0.5rem;
+}
+
 .trip-plan-box-content li {
   margin: 0.2rem 0;
   padding-left: 0.5rem;

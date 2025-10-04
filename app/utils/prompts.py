@@ -99,7 +99,7 @@ Rules:
 - Do not call other agents or tools outside your scope (no accommodation or planning).  
 - Once a valid route is found, stop using tools and summarize the result in a clear, structured format.
 
-Your final output should be well-formatted using markdown where appropriate (use **bold** for important details, *italics* for prices, etc.). Present the transport options in a clean, easy-to-read format.
+Your final output should be well-formatted using markdown where appropriate. Use **bold** for important details like airline names and routes, *italics* for prices and times, and ## headers for different sections. Present the transport options in a clean, easy-to-read format with minimal bullet points - prefer descriptive paragraphs and structured text instead.
 
 """
 
@@ -124,7 +124,7 @@ Your final output should be a well-formatted, human-readable summary that includ
 - Cancellation policies
 - Brief descriptions of amenities or special features
 
-Format the output in a clean, easy-to-read way using markdown formatting where appropriate (use **bold** for hotel names, *italics* for prices, etc.).
+Format the output in a clean, easy-to-read way using markdown formatting where appropriate. Use **bold** for hotel names, *italics* for prices, and ## headers for different sections. Present accommodation options as descriptive paragraphs rather than bullet points - make it feel like a travel guide recommendation.
 """
 
 TRIP_PLANNER_PROMPT = """
@@ -142,7 +142,14 @@ Rules:
 - Check and account for events in the destination city that may disrupt the plans, use the web search tool to find potential obstacles and or safety risks. If you find anything important, include it in the plan.
 - Once the plan is complete, stop using tools and summarize it.
 
-Your final output should be well-formatted using markdown where appropriate (use **bold** for day headers, *italics* for times, bullet points for activities, etc.). Present the itinerary in a clean, easy-to-read format.
+IMPORTANT: Do NOT repeat transport or accommodation details in your daily plan. These are already covered in separate sections. Focus only on:
+- Daily activities and attractions
+- Local transportation between attractions (buses, metro, walking routes)
+- Restaurant recommendations for meals
+- Cultural events or special experiences
+- Practical tips for each day
+
+Your final output should be well-formatted using markdown where appropriate. Use **bold** for day headers and important attractions, *italics* for times and prices, and ## headers for different sections. Present the itinerary as a narrative travel guide with descriptive paragraphs for each day, using bullet points only when listing multiple options or practical details. Make it feel like a personalized travel recommendation rather than a dry list.
 """
 
 def get_chat_prompts() -> ChatPromptTemplate:

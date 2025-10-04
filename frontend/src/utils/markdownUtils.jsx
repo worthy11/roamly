@@ -11,12 +11,31 @@ export const formatMarkdown = (text) => {
     .replace(/^## (.*$)/gim, '<h3>$1</h3>')
     // Headers ### text -> <h4>text</h4>
     .replace(/^### (.*$)/gim, '<h4>$1</h4>')
-    // Bullet points - text -> <li>text</li>
+    // Headers #### text -> <h5>text</h5>
+    .replace(/^#### (.*$)/gim, '<h5>$1</h5>')
+    // Bullet points - text -> <li>text</li> (only if not already in a list)
     .replace(/^- (.*$)/gim, '<li>$1</li>')
     // Numbered lists 1. text -> <li>text</li>
     .replace(/^\d+\. (.*$)/gim, '<li>$1</li>')
-    // Line breaks
-    .replace(/\n/g, '<br/>');
+    // Wrap consecutive list items in ul/ol tags only when there are multiple items
+    .replace(/(<li>.*<\/li>)(\s*<li>.*<\/li>)+/g, (match) => {
+      // Check if it's a numbered list (contains digits)
+      if (/\d+\./.test(match)) {
+        return `<ol>${match}</ol>`;
+      } else {
+        return `<ul>${match}</ul>`;
+      }
+    })
+    // Convert single list items to plain text
+    .replace(/<li>(.*?)<\/li>(?!\s*<li>)/g, '• $1')
+    // Line breaks (but preserve double line breaks for paragraphs)
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br/>')
+    // Wrap in paragraph tags
+    .replace(/^(.*)$/, '<p>$1</p>')
+    // Clean up empty paragraphs
+    .replace(/<p><\/p>/g, '')
+    .replace(/<p><br\/><\/p>/g, '');
 };
 
 // Markdown renderer component
