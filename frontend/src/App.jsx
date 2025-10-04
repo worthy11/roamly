@@ -1,6 +1,5 @@
 import Layout from "./components/Layout";
 import Chat from "./components/Chat";
-import TripForm from "./components/TripForm";
 import Map from "./components/Map";
 import "./App.css";
 import { useState, useEffect } from "react";

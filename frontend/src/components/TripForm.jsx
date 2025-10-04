@@ -113,7 +113,7 @@ Key attractions / points of interest: ${formData.attractions}`;
           value={formData.attractions}
           onChange={handleFormChange}
         ></textarea>
-        <button type="submit" className="chat-send-btn">
+        <button type="submit" className="trip-form-submit">
           Send
         </button>
       </form>

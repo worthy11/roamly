@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { BsRobot } from "react-icons/bs";
 import './Chat.css';
 import { API_BASE } from "../config";
+import TripForm from './TripForm';
 
 function Chat() {
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
+  const [formOpen, setFormOpen] = useState(false); // nowy stan
 
   const sendMessage = async (text) => {
     const userMessage = { from: "user", text };
@@ -58,9 +60,7 @@ function Chat() {
       </h2>
       <div className="chatbot-underline"></div>
       <div className="chat-window">
-        {chat.length === 0 && (
-          <div className="chat-placeholder">No messages</div>
-        )}
+        {chat.length === 0 && <div className="chat-placeholder">No messages</div>}
         {chat.map((msg, idx) => (
           <div key={idx} className={`chat-message ${msg.from}`}>
             {msg.text}
@@ -75,10 +75,19 @@ function Chat() {
           onChange={(e) => setMessage(e.target.value)}
           className="chat-input"
         />
-        <button type="submit" className="chat-send-btn">
-          Send
+        <button type="submit" className="chat-send-btn">Send</button>
+        <button
+          type="button"
+          className="chat-send-btn open-form-btn"
+          onClick={() => setFormOpen(!formOpen)}
+        >
+          Plan Trip
         </button>
       </form>
+
+      <div className={`trip-form-wrapper ${formOpen ? 'open' : ''}`}>
+        <TripForm onSubmit={sendMessage} />
+      </div>
     </div>
   );
 }

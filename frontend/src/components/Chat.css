@@ -81,6 +81,11 @@
   background: #fff;
   color: #2d4238;
 }
+.chat-input:focus {
+  outline: none;
+  border-color: #d7ab75;
+  box-shadow: 0 0 0 2px #d7ab75;
+}
 
 .chat-send-btn {
   background: #e6b474;
@@ -120,5 +125,36 @@
   background: #2d423875; 
   margin-top: 0.5rem;
 }
+
+.trip-form-wrapper {
+  position: fixed;
+  top: 60px;
+  left: -570px; ; 
+  width: 400px;
+  height: 100%;
+  transition: left 0.3s ease;
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+.trip-form-wrapper.open {
+  left: 0; 
+}
+
+.trip-form-wrapper  {
+  background: transparent; 
+  padding: 2rem;
+}
+
+.open-form-btn {
+  background: #5a9b5d;
+  color: #fff;
+}
+
+.open-form-btn:hover {
+  background: #3e8e41;
+}
+
+
 
 
