@@ -8,11 +8,12 @@ from app.models import TripPlan
 import requests
 import os
 import time
+import json
 from dotenv import load_dotenv
 from tavily import TavilyClient
 
 
-load_dotenv()
+load_dotenv(override=True)
 
 @tool
 def search_trips(query: str, top_k: int = 3) -> str:
