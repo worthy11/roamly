@@ -11,7 +11,7 @@ function Navbar() {
       <span className="navbar-title">Roamly</span>
       <div className="navbar-links">
         <Link to="/"><AiFillHome size={30} title="Home" /></Link>
-        <Link to="/travels"><FaPlaneDeparture size={30} title="Travels" /></Link>
+        <Link to="/app"><BsRobot size={30} title="App" /></Link>
             <button 
       onClick={() => window.location.href = '/travels'} 
       className="button-navbar"

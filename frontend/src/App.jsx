@@ -7,7 +7,7 @@ import {
   GoogleMap,
   LoadScript,
   MarkerF,
-  InfoWindowF,
+  InfoBox,
 } from "@react-google-maps/api";
 import { API_BASE } from "./config";
 
@@ -68,7 +68,6 @@ function App() {
       const botMessage = { from: "bot", text: data.response };
       setChat((prev) => [...prev, botMessage]);
       
-      // Log structured trip plan to console if available
       if (data.trip_plan) {
         console.log(data.trip_plan);
       }
@@ -148,34 +147,36 @@ Key attractions / points of interest: ${formData.attractions}`;
               )}
 
               {selectedTrip && (
-                <InfoWindowF
-                  position={{
-                    lat: selectedTrip.city.lat,
-                    lng: selectedTrip.city.lon,
-                  }}
-                  onCloseClick={() => setSelectedTrip(null)}
-                >
-                  <div className="info-window">
-                    <h3>
-                      {selectedTrip.city.name}, {selectedTrip.trip.country}
-                    </h3>
-                    {selectedTrip.trip.description && (
-                      <p>{selectedTrip.trip.description}</p>
-                    )}
-                    {selectedTrip.trip.duration && (
-                      <p>Duration: {selectedTrip.trip.duration} days</p>
-                    )}
-                    {selectedTrip.trip.budget && (
-                      <p>Budget: ${selectedTrip.trip.budget}</p>
-                    )}
-                    {selectedTrip.trip.num_people && (
-                      <p>People: {selectedTrip.trip.num_people}</p>
-                    )}
-                    {selectedTrip.trip.activity_level && (
-                      <p>Activity: {selectedTrip.trip.activity_level}</p>
-                    )}
-                  </div>
-                </InfoWindowF>
+                <InfoBox
+  position={{
+    lat: selectedTrip.city.lat,
+    lng: selectedTrip.city.lon,
+  }}
+  options={{
+    closeBoxURL: "", // disables default close
+    enableEventPropagation: true,
+    pixelOffset: new window.google.maps.Size(-120, -50), // adjust if needed
+  }}
+>
+  <div className="info-window" style={{ position: "relative" }}>
+    {/* Custom close button */}
+    <button
+      className="info-close-btn"
+      onClick={() => setSelectedTrip(null)}
+    >
+      ×
+    </button>
+
+    <h3>
+      {selectedTrip.city.name}, {selectedTrip.trip.country}
+    </h3>
+    {selectedTrip.trip.description && <p>{selectedTrip.trip.description}</p>}
+    {selectedTrip.trip.duration && <p><span>Duration:</span> {selectedTrip.trip.duration} days</p>}
+    {selectedTrip.trip.budget && <p><span>Budget:</span> ${selectedTrip.trip.budget}</p>}
+    {selectedTrip.trip.num_people && <p><span>People:</span> {selectedTrip.trip.num_people}</p>}
+    {selectedTrip.trip.activity_level && <p><span>Activity:</span> {selectedTrip.trip.activity_level}</p>}
+  </div>
+</InfoBox>
               )}
             </GoogleMap>
           </LoadScript>
