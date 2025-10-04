@@ -9,6 +9,7 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 def chat(request: ChatRequest):
     try:
         response_text, trip_plan = llm_service.chat(request.message)
+        print(trip_plan)
         return ChatResponse(
             response=response_text,
             user_id=request.user_id,

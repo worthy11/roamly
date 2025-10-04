@@ -102,7 +102,7 @@ class TripPlan(BaseModel):
     travel: str
     accommodation: str
     costs: str
-    attractions: str
+    daily_plan: List[dict]
 
 class ChatResponse(BaseModel):
     response: str
