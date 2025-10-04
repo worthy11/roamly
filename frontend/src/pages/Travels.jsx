@@ -49,7 +49,6 @@ function Travel() {
 
 
   return (
-    <Layout>
       <div className={styles.tripForm}>
         <h1 className={styles.tripFormTitle}>Create a new Trip</h1>
         <form className={styles.tripFormFields} onSubmit={handleSubmit}>
@@ -63,7 +62,6 @@ function Travel() {
           <button type="submit">Create Trip</button>
         </form>
       </div>
-    </Layout>
   );
 }
 

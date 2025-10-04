@@ -1,14 +1,17 @@
 import Layout from "./components/Layout";
 import Chat from "./components/Chat";
 import Map from "./components/Map";
+import Navbar from "./components/Navbar";
+import Travel from "./pages/Travels";
 import "./App.css";
 import { useState, useEffect } from "react";
 import { API_BASE } from "./config";
+import { BsRobot } from "react-icons/bs";
 
 function App() {
   const [trips, setTrips] = useState([]);
   const [selectedTrip, setSelectedTrip] = useState(null);
-  const [isChatOpen, setIsChatOpen] = useState(false); // nowy stan
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
@@ -27,6 +30,8 @@ function App() {
 
   return (
     <Layout>
+      <Navbar onOpenForm={() => setIsFormOpen(true)} />
+
       <Map 
         trips={trips}
         selectedTrip={selectedTrip}
@@ -34,14 +39,15 @@ function App() {
       />
 
       {!isChatOpen && (
-  <button 
-    className="open-chatbot-btn" 
-    onClick={() => setIsChatOpen(true)}
-  >
-    Open ChatBot
-  </button>
-)}
-
+        <button 
+          className="open-chatbot-btn" 
+          onClick={() => setIsChatOpen(true)}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            Open ChatBot <BsRobot size={25} />
+          </span>
+        </button>
+      )}
 
       <div className={`chat-form-wrapper ${isChatOpen ? "open" : ""}`}>
         <button 
@@ -53,6 +59,15 @@ function App() {
         <Chat />
       </div>
 
+      <div className={`slide-down-form ${isFormOpen ? "open" : ""}`}>
+  <button 
+    className="close-form-btn"
+    onClick={() => setIsFormOpen(false)}
+  >
+    ×
+  </button>
+  <Travel />
+</div>
     </Layout>
   );
 }

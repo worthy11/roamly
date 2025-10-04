@@ -53,10 +53,9 @@ function Chat() {
   };
 
   const handleFormSubmit = async (formData) => {
-    // Close the form
+
     setFormOpen(false);
 
-    // Convert form data to a formatted string message
     const tripQuery = `I want to plan a trip with the following details:
 - From: ${formData.from}
 - To: ${formData.to}
@@ -68,14 +67,12 @@ function Chat() {
 - Budget: ${formData.budget ? `$${formData.budget}` : 'flexible'}
 - Key attractions/interests: ${formData.attractions || 'general sightseeing'}`;
 
-    // Add user message to chat
     const userMessage = { 
       from: "user", 
       text: `Planning a trip from ${formData.from} to ${formData.to}...` 
     };
     setChat((prev) => [...prev, userMessage]);
 
-    // Reset trip plan and set generating state
     setTripPlan({
       transport: '',
       accommodation: '',
@@ -122,17 +119,15 @@ function Chat() {
               const parsed = JSON.parse(data);
               const { stage, result } = parsed;
               
-              // Extract the actual output text from the agent response object
               const extractOutput = (agentResult) => {
                 if (typeof agentResult === 'string') {
                   return agentResult;
                 }
                 if (agentResult && typeof agentResult === 'object') {
-                  // If it has an 'output' field, use that
+                 
                   if (agentResult.output) {
                     return agentResult.output;
                   }
-                  // If it's an object without 'output', stringify it
                   return JSON.stringify(agentResult);
                 }
                 return String(agentResult);
@@ -185,7 +180,6 @@ function Chat() {
           </div>
         ))}
         
-        {/* Trip Plan Container - shows streaming trip plan */}
         <TripPlanContainer tripPlan={tripPlan} />
       </div>
       <form className="chat-input-row" onSubmit={handleSend}>

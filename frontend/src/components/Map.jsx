@@ -39,35 +39,42 @@ function Map({ trips, selectedTrip, setSelectedTrip }) {
           )}
 
           {selectedTrip && (
-            <InfoBox
-              position={{
-                lat: selectedTrip.city.lat,
-                lng: selectedTrip.city.lon,
-              }}
-              onCloseClick={() => setSelectedTrip(null)}
-            >
-              <div className="info-window">
-                <h3>
-                  {selectedTrip.city.name}, {selectedTrip.trip.country}
-                </h3>
-                {selectedTrip.trip.description && (
-                  <p>{selectedTrip.trip.description}</p>
-                )}
-                {selectedTrip.trip.duration && (
-                  <p>Duration: {selectedTrip.trip.duration} days</p>
-                )}
-                {selectedTrip.trip.budget && (
-                  <p>Budget: ${selectedTrip.trip.budget}</p>
-                )}
-                {selectedTrip.trip.num_people && (
-                  <p>People: {selectedTrip.trip.num_people}</p>
-                )}
-                {selectedTrip.trip.activity_level && (
-                  <p>Activity: {selectedTrip.trip.activity_level}</p>
-                )}
-              </div>
-            </InfoBox>
-          )}
+  <InfoBox
+    position={{
+      lat: selectedTrip.city.lat,
+      lng: selectedTrip.city.lon,
+    }}
+    options={{ closeBoxURL: '', enableEventPropagation: true }}
+  >
+    <div className="info-window">
+      {/* Twój przycisk zamknięcia */}
+      <button
+        style={{
+          position: 'absolute',
+          top: '4px',
+          right: '4px',
+          background: 'transparent',
+          border: 'none',
+          color: '#fff',
+          fontSize: '16px',
+          cursor: 'pointer',
+        }}
+        onClick={() => setSelectedTrip(null)}
+      >
+        ×
+      </button>
+
+      <h3>
+        {selectedTrip.city.name}, {selectedTrip.trip.country}
+      </h3>
+      {selectedTrip.trip.description && <p>{selectedTrip.trip.description}</p>}
+      {selectedTrip.trip.duration && <p>Duration: {selectedTrip.trip.duration} days</p>}
+      {selectedTrip.trip.budget && <p>Budget: ${selectedTrip.trip.budget}</p>}
+      {selectedTrip.trip.num_people && <p>People: {selectedTrip.trip.num_people}</p>}
+      {selectedTrip.trip.activity_level && <p>Activity: {selectedTrip.trip.activity_level}</p>}
+    </div>
+  </InfoBox>
+)}
         </GoogleMap>
       </LoadScript>
     </div>
