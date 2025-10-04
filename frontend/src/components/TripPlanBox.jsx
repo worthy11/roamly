@@ -11,6 +11,10 @@ const TripPlanBox = ({ type, title, content, icon }) => {
         return 'trip-plan-box accommodation-box';
       case 'plan':
         return 'trip-plan-box plan-box';
+      case 'tips':
+        return 'trip-plan-box tips-box';
+      case 'risks':
+        return 'trip-plan-box risks-box';
       default:
         return 'trip-plan-box';
     }

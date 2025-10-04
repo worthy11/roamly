@@ -17,16 +17,19 @@ async def chat(request: ChatRequest):
     query = request.message
     async def event_stream():
         transport_result = await llm_service.run("transport", query)
-        transport_output = transport_result.get("output", str(transport_result))
-        yield f"data: {json.dumps({'stage': 'transport', 'result': transport_output})}\n\n"
+        yield f"data: {json.dumps({'stage': 'transport', 'result': transport_result})}\n\n"
 
-        accommodation_result = await llm_service.run("accommodation", f"Transport options: {transport_output}\n\nYour query: {query}")
-        accommodation_output = accommodation_result.get("output", str(accommodation_result))
-        yield f"data: {json.dumps({'stage': 'accommodation', 'result': accommodation_output})}\n\n"
+        accommodation_result = await llm_service.run("accommodation", f"Transport options: {transport_result}\n\nYour query: {query}")
+        yield f"data: {json.dumps({'stage': 'accommodation', 'result': accommodation_result})}\n\n"
 
-        plan_result = await llm_service.run("planner", f"Transport options: {transport_output}\n\nAccommodation result: {accommodation_output}\n\nYour query: {query}")
-        plan_output = plan_result.get("output", str(plan_result))
-        yield f"data: {json.dumps({'stage': 'plan', 'result': plan_output})}\n\n"
+        plan_result = await llm_service.run("planner", f"Transport options: {transport_result}\n\nAccommodation result: {accommodation_result}\n\nYour query: {query}")
+        yield f"data: {json.dumps({'stage': 'plan', 'result': plan_result})}\n\n"
+
+        tips_result = await llm_service.run("tips", f"Transport options: {transport_result}\n\nAccommodation result: {accommodation_result}\n\nTrip plan: {plan_result}\n\nYour query: {query}")
+        yield f"data: {json.dumps({'stage': 'tips', 'result': tips_result})}\n\n"
+
+        risks_result = await llm_service.run("risks", f"Transport options: {transport_result}\n\nAccommodation result: {accommodation_result}\n\nTrip plan: {plan_result}\n\nTips: {tips_result}\n\nYour query: {query}")
+        yield f"data: {json.dumps({'stage': 'risks', 'result': risks_result})}\n\n"
 
         yield "data: [DONE]\n\n"
     return StreamingResponse(event_stream(), media_type="text/event-stream")

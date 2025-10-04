@@ -1,10 +1,10 @@
 import TripPlanBox from './TripPlanBox';
 
 const TripPlanContainer = ({ tripPlan }) => {
-  const { transport, accommodation, plan, isGenerating } = tripPlan;
+  const { transport, accommodation, plan, tips, risks, isGenerating } = tripPlan;
 
   // Don't render if no content and not generating
-  if (!isGenerating && !transport && !accommodation && !plan) {
+  if (!isGenerating && !transport && !accommodation && !plan && !tips && !risks) {
     return null;
   }
 
@@ -40,6 +40,20 @@ const TripPlanContainer = ({ tripPlan }) => {
           title="Detailed Plan"
           content={plan}
           icon="🗓️"
+        />
+        
+        <TripPlanBox
+          type="tips"
+          title="Travel Tips"
+          content={tips}
+          icon="💡"
+        />
+        
+        <TripPlanBox
+          type="risks"
+          title="Safety & Risks"
+          content={risks}
+          icon="⚠️"
         />
       </div>
     </div>

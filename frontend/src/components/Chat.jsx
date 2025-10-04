@@ -13,6 +13,8 @@ function Chat() {
     transport: '',
     accommodation: '',
     plan: '',
+    tips: '',
+    risks: '',
     isGenerating: false
   });
 
@@ -77,6 +79,8 @@ function Chat() {
       transport: '',
       accommodation: '',
       plan: '',
+      tips: '',
+      risks: '',
       isGenerating: true
     });
 
@@ -141,6 +145,10 @@ function Chat() {
                 setTripPlan(prev => ({ ...prev, accommodation: outputText }));
               } else if (stage === 'plan') {
                 setTripPlan(prev => ({ ...prev, plan: outputText }));
+              } else if (stage === 'tips') {
+                setTripPlan(prev => ({ ...prev, tips: outputText }));
+              } else if (stage === 'risks') {
+                setTripPlan(prev => ({ ...prev, risks: outputText }));
               }
             } catch (e) {
               console.error('Error parsing SSE data:', e);

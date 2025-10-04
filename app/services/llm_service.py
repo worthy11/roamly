@@ -34,6 +34,8 @@ class LLMService:
         transport_tools = [search_transport, web_search]
         accommodation_tools = [search_hotels]
         planning_tools = [format_trip_summary, web_search]
+        tips_tools = [web_search]
+        risks_tools = [web_search]
         common_tools = sql_tools + [search_trips]
 
         self.agents = {
@@ -41,6 +43,8 @@ class LLMService:
             "transport": self._make_agent(transport_tools, self.prompts["transport"]),
             "accommodation": self._make_agent(accommodation_tools, self.prompts["accomodation"]),
             "planner": self._make_agent(planning_tools, self.prompts["planner"]),
+            "tips": self._make_agent(tips_tools, self.prompts["tips"]),
+            "risks": self._make_agent(risks_tools, self.prompts["risks"]),
         }
 
     def _make_agent(self, tools, prompt):

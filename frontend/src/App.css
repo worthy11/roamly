@@ -207,6 +207,14 @@
   border-left: 4px solid #FF9800;
 }
 
+.tips-box {
+  border-left: 4px solid #4CAF50;
+}
+
+.risks-box {
+  border-left: 4px solid #F44336;
+}
+
 
 @media (max-width: 768px) {
   .trip-plan-container {
