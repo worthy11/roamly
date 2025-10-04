@@ -5,10 +5,8 @@ from langchain_openai import ChatOpenAI
 from app.services.vector_search_service import vector_search_service
 from app.database import SessionLocal
 from app.models import TripPlan
-import requests
 import os
 import json
-import time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -85,14 +83,14 @@ def normalize_flight(offer):
 
 @tool
 def search_transport(origin: str, destination: str, date: str, passengers: int, pref_type: str = "") -> str:
-    """Search for transport options (flights, transit, cars) and return best options.
+    """Search for transport options (flights, trains, cars) and return best options.
     
     Args:
         origin: Origin city IATA code
         destination: Destination city IATA code
         date: Travel date in YYYY-MM-DD format
         passengers: Number of passengers
-        pref_type: Preferred transport type ('plane', 'transit', 'car', or empty for all)
+        pref_type: Preferred transport type ('plane', 'train', 'car', or empty for all)
     """
     options = []
 
@@ -101,15 +99,16 @@ def search_transport(origin: str, destination: str, date: str, passengers: int, 
         if flights and not isinstance(flights, dict):
             options.extend(flights)
         
-    if not options or not pref_type or pref_type == "transit":
-        for train in get_transit(origin, destination, date, passengers):
+    if not options or not pref_type or pref_type == "train":
+        for train in get_trains(origin, destination, date, passengers):
             options.append(train)
 
     if not options or not pref_type or pref_type == "car":
         for car in get_car_routes(origin, destination, date, passengers):
             options.append(car)
 
-    return options
+    top_k = select_top_transport(options)
+    return top_k
 
 def get_flights(origin: str, destination: str, date: str, passengers: int):
     """Find flight offers between two cities on a given date."""
@@ -129,142 +128,27 @@ def get_flights(origin: str, destination: str, date: str, passengers: int):
     async def _arun(self, *args, **kwargs):
         raise NotImplementedError
 
-def estimate_co2(self, distance_km: float, passengers: int) -> float:
-    factor = 0.1
-    return round(distance_km * factor * passengers, 2)
+def get_trains(origin, destination, date, passengers):
+    """Get train options (placeholder for future implementation)."""
+    return []
 
-def get_transit(origin, destination, date, passengers):
-    """Get transit options on a given date."""
-    try:
-        url = "https://maps.googleapis.com/maps/api/directions/json"
-        params = {
-            "origin": origin,
-            "destination": destination,
-            "mode": "transit",
-            "transit_mode": "train",
-            "departure_time": date if date != "now" else int(time.time()),
-            "key": os.getenv("GOOGLE_API_KEY"),
-            "alternatives": "true"
-        }
-        resp = requests.get(url, params=params)
-        data = resp.json()
+def get_car_routes(origin, destination, date, passengers):
+    """Get car route options (placeholder for future implementation)."""
+    return []
 
-        routes = []
-        for route in data.get("routes", [])[:3]:
-            leg = route["legs"][0]
-
-            departure = leg["departure_time"]["text"]
-            arrival = leg["arrival_time"]["text"]
-            duration = leg["duration"]["text"]
-            distance_m = leg["distance"]["value"]
-
-            mode_type = "transit"
-            fare = route.get("fare")
-            price = float(fare["value"]) if fare else None
-            currency = fare["currency"] if fare else None
-
-            stops = []
-            for step in leg["steps"]:
-                if step.get("travel_mode") == "TRANSIT":
-                    vehicle_type = step["transit_details"]["line"]["vehicle"]["type"]
-                    if vehicle_type == "BUS":
-                        mode_type = "bus"
-                    elif vehicle_type in ("HEAVY_RAIL", "RAIL", "SUBWAY"):
-                        mode_type = "train"
-                    else:
-                        mode_type = "transit"
-
-                    stops.append(step["transit_details"]["headsign"])
-
-            distance_km = distance_m / 1000
-            if mode_type == "bus":
-                factor = 0.1
-            elif mode_type == "train":
-                factor = 0.02
-            else:
-                factor = 0.05
-            co2 = round(distance_km * factor * passengers, 2)
-
-            routes.append({
-                "mode": mode_type,
-                "provider": "Google Transit",
-                "price": price,
-                "currency": currency,
-                "duration": duration,
-                "seats_available": None,
-                "co2_kg": co2,
-                "details": {
-                    "from": leg["start_address"],
-                    "to": leg["end_address"],
-                    "departure": departure,
-                    "arrival": arrival,
-                    "stops": stops
-                }
-            })
-
-        return routes
-    except Exception as e:
-        return {"error": str(e)}
-
-    async def _arun(self, *args, **kwargs):
-        raise NotImplementedError
-
-def get_car_routes(origin: str, destination: str, fuel_type: str = "gasoline",
-             consumption_l_per_100km: float = 7.0, fuel_price_per_l: float = 1.8,
-             passengers: int = 1, seats: int = 4):
-    """Find driving routes, cost, and CO2 estimates using Google Maps Routes API."""
-
-    try:
-        url = "https://routes.googleapis.com/v2/routes:computeRoutes"
-        headers = {"Content-Type": "application/json", "X-Goog-Api-Key": os.getenv("GOOGLE_API_KEY")}
-        body = {
-            "origin": {"address": origin},
-            "destination": {"address": destination},
-            "travelMode": "DRIVE",
-            "routingPreference": "TRAFFIC_AWARE"
-        }
-        resp = requests.post(url, headers=headers, json=body)
-        data = resp.json()
-
-        routes = []
-        for route in data.get("routes", [])[:3]:
-            leg = route["legs"][0]
-            distance_km = leg["distanceMeters"] / 1000
-            duration = leg["duration"]
-
-            liters_used = (consumption_l_per_100km / 100) * distance_km
-            cost = liters_used * fuel_price_per_l
-
-            if fuel_type == "gasoline":
-                co2_factor = 2.31
-            elif fuel_type == "diesel":
-                co2_factor = 2.68
-            else:
-                co2_factor = 0.1
-            co2 = liters_used * co2_factor
-
-            routes.append({
-                "mode": "car",
-                "provider": "Google Routes",
-                "price": round(cost, 2),
-                "currency": "EUR",
-                "duration": duration,
-                "seats_available": seats,
-                "co2_kg": round(co2 * passengers, 2),
-                "details": {
-                    "from": leg["startLocation"]["latLng"],
-                    "to": leg["endLocation"]["latLng"],
-                    "distance_km": round(distance_km, 1),
-                    "fuel_type": fuel_type,
-                    "consumption_l_per_100km": consumption_l_per_100km
-                }
-            })
-        return routes
-    except Exception as e:
-        return {"error": str(e)}
-
-    async def _arun(self, *args, **kwargs):
-        raise NotImplementedError
+def select_top_transport(options: list):
+    """Select cheapest and most eco-friendly from transport options."""
+    if not options:
+        return {}
+    
+    cheapest = min(options, key=lambda x: x.get("price", float('inf')))
+    eco_options = [o for o in options if o.get("co2_kg")]
+    eco = min(eco_options, key=lambda x: x["co2_kg"]) if eco_options else None
+    
+    return {
+        "cheapest": cheapest,
+        "eco": eco,
+    }
 
 @tool
 def format_trip_summary(destination: str, duration_days: int, transport_info: str, hotel_info: str, preferences: str = "") -> str:

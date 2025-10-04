@@ -10,7 +10,7 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 @router.post("/text", response_model=ChatResponse)
 def chat(request: ChatRequest):
     response = str(llm_service.chat(request.message))
-    return ChatResponse(response=response)
+    return ChatResponse(response=response, user_id=request.user_id)
 
 @router.post("/generate", response_model=TripPlan)
 async def chat(request: ChatRequest):
