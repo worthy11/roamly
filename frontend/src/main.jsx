@@ -9,8 +9,7 @@ import Chat from './pages/Chat.jsx'
 import Login from './Login.jsx'
 
 const router = createBrowserRouter([
-  {path: "/", element: <Login />},
-  {path: "/app", element: <App />},
+  {path: "/", element: <App />},
   {path: "/travels", element: <Travel />},
   {path: "*", element: <ErrorPage />},
   {path: "/chat", element: <Chat /> }
