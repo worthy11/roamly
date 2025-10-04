@@ -34,7 +34,15 @@ Create a formatted summary with exactly these sections:
 3. travel (string): Summarize the transport options found, highlighting the best choices with prices and times
 4. accommodation (string): Summarize the hotel options found, highlighting good value options with prices and locations
 5. costs (string): Calculate and present total estimated costs based on the actual prices from transport and hotels
-6. attractions (string): Based on the destination, suggest key attractions and activities to visit"""
+6. daily_plan (List[dict]): Detailed day-by-day itinerary with the following structure for each day:
+   - day (int): Day number (1, 2, 3, etc.)
+   - date (string): Date in YYYY-MM-DD format
+   - major_attractions (List[str]): List of major attractions/activities for that day, personalized based on user preferences
+   - transport_info (string): Information on how to get to attractions using local transport (buses, trains, metro, walking routes, etc.)
+   - time_schedule (string): Suggested timing for activities (morning, afternoon, evening)
+   - notes (string): Additional tips, recommendations, or important information for that day
+
+The daily_plan should be personalized based on the user's preferences and interests mentioned in their request. Include specific local transport options, routes, and practical information for getting around."""
 
 TRAVEL_ASSISTANT_SYSTEM_MESSAGE = """You are a helpful travel assistant. You help users find their perfect trip.
 

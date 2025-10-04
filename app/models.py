@@ -96,13 +96,21 @@ class ChatRequest(BaseModel):
     user_id: int
     message: str
 
+class DailyPlan(BaseModel):
+    day: int
+    date: str
+    major_attractions: List[str]
+    transport_info: str
+    time_schedule: str
+    notes: str
+
 class TripPlan(BaseModel):
     destination: str
     duration_days: str
     travel: str
     accommodation: str
     costs: str
-    attractions: str
+    daily_plan: List[DailyPlan]
 
 class ChatResponse(BaseModel):
     response: str

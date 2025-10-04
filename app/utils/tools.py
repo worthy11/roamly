@@ -185,11 +185,16 @@ def format_trip_summary(destination: str, duration_days: int, transport_info: st
 
 💰 Costs: {trip_plan.costs[:150]}...
 
-🎯 Attractions: {trip_plan.attractions[:200]}..."""
+🗓️ Daily plan: {len(trip_plan.daily_plan)} days planned with personalized attractions and local transport info..."""
         }
         
-        return f"__STRUCTURED__{json.dumps(result)}__STRUCTURED__"
+        # Ensure JSON serialization works properly
+        json_output = json.dumps(result, ensure_ascii=False)
+        return f"__STRUCTURED__{json_output}__STRUCTURED__"
     except Exception as e:
+        print(f"❌ Error in format_trip_summary: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return f"Error planning trip: {str(e)}"
 
 

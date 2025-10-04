@@ -67,6 +67,11 @@ function App() {
       const data = await response.json();
       const botMessage = { from: "bot", text: data.response };
       setChat((prev) => [...prev, botMessage]);
+      
+      // Log structured trip plan to console if available
+      if (data.trip_plan) {
+        console.log(data.trip_plan);
+      }
     } catch (error) {
       console.error("Error fetching response:", error);
       setChat((prev) => [

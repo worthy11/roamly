@@ -31,7 +31,8 @@ class LLMService:
             agent=self.agent,
             tools=self.tools,
             verbose=True,
-            handle_parsing_errors=True
+            handle_parsing_errors=True,
+            return_intermediate_steps=True
         )
     
     def chat(self, message: str, chat_history: List[Dict] = None) -> Tuple[str, Optional[TripPlan]]:
@@ -50,9 +51,19 @@ class LLMService:
         
         # Check if output contains structured trip plan
         match = re.search(r'__STRUCTURED__(.+?)__STRUCTURED__', output, re.DOTALL)
+        
+        # If not in final output, check intermediate steps for tool outputs
+        if not match and "intermediate_steps" in response:
+            for action, observation in response["intermediate_steps"]:
+                if isinstance(observation, str):
+                    match = re.search(r'__STRUCTURED__(.+?)__STRUCTURED__', observation, re.DOTALL)
+                    if match:
+                        break
+        
         if match:
             try:
-                structured_data = json.loads(match.group(1))
+                json_str = match.group(1)
+                structured_data = json.loads(json_str)
                 trip_plan_data = structured_data.get("trip_plan")
                 text_summary = structured_data.get("text_summary", "")
                 
@@ -68,13 +79,29 @@ class LLMService:
                     print(f"\n🚗 TRAVEL:\n{trip_plan.travel}")
                     print(f"\n🏨 ACCOMMODATION:\n{trip_plan.accommodation}")
                     print(f"\n💰 COSTS:\n{trip_plan.costs}")
-                    print(f"\n🎯 ATTRACTIONS:\n{trip_plan.attractions}")
+                    
+                    if trip_plan.daily_plan:
+                        print(f"\n🗓️ DETAILED DAY-BY-DAY PLAN:")
+                        for day_plan in trip_plan.daily_plan:
+                            print(f"\n  📅 Day {day_plan.day} - {day_plan.date}")
+                            print(f"  🎯 Major Attractions: {', '.join(day_plan.major_attractions)}")
+                            print(f"  🚌 Transport: {day_plan.transport_info}")
+                            print(f"  ⏰ Schedule: {day_plan.time_schedule}")
+                            if day_plan.notes:
+                                print(f"  💡 Notes: {day_plan.notes}")
+                    
                     print("="*80 + "\n")
                     
                     # Return the text summary and the structured plan
                     return (text_summary, trip_plan)
+            except json.JSONDecodeError as e:
+                print(f"❌ JSON parsing error: {e}")
+                print(f"JSON string (first 200 chars): {json_str[:200]}")
+                return (output, None)
             except Exception as e:
-                print(f"Error parsing structured output: {e}")
+                print(f"❌ Error parsing structured output: {e}")
+                import traceback
+                traceback.print_exc()
                 return (output, None)
         
         return (output, None)
