@@ -8,6 +8,7 @@ from app.models import TripPlan
 import requests
 import os
 import json
+import time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -84,7 +85,7 @@ def normalize_flight(offer):
 
 @tool
 def search_transport(origin: str, destination: str, date: str, passengers: int, pref_type: str = "") -> str:
-    """Search for transport options (flights, trains, cars) and return best options.
+    """Search for transport options (flights, transit, cars) and return best options.
     
     Args:
         origin: Origin city IATA code
@@ -108,8 +109,7 @@ def search_transport(origin: str, destination: str, date: str, passengers: int, 
         for car in get_car_routes(origin, destination, date, passengers):
             options.append(car)
 
-    top_k = select_top_transport(options)
-    return top_k
+    return options
 
 def get_flights(origin: str, destination: str, date: str, passengers: int):
     """Find flight offers between two cities on a given date."""
@@ -265,20 +265,6 @@ def get_car_routes(origin: str, destination: str, fuel_type: str = "gasoline",
 
     async def _arun(self, *args, **kwargs):
         raise NotImplementedError
-
-def select_top_transport(options: list):
-    """Select cheapest and most eco-friendly from transport options."""
-    if not options:
-        return {}
-    
-    # cheapest = min(options, key=lambda x: x.get("price", float('inf')))
-    # eco_options = [o for o in options if o.get("co2_kg")]
-    # eco = min(eco_options, key=lambda x: x["co2_kg"]) if eco_options else None
-    
-    return {
-        "cheapest": options[0],
-        "eco": options[0],
-    }
 
 @tool
 def format_trip_summary(destination: str, duration_days: int, transport_info: str, hotel_info: str, preferences: str = "") -> str:

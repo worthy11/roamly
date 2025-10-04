@@ -146,7 +146,7 @@ Respond ONLY with JSON:
                     ))
                     
                     resp = session.post(
-                        f"{BASE_URL}/chat/text",
+                        f"{BASE_URL}/chat/generate/",
                         json={"user_id": 1, "message": test.message},
                         timeout=(30, 180),  # (connect timeout, read timeout)
                         headers={'Connection': 'close'}  # Prevent keep-alive issues
@@ -252,22 +252,6 @@ Respond ONLY with JSON:
 def get_tests() -> List[Test]:
     """Define all test cases"""
     return [
-        # Basic conversation
-        Test("Greeting", "Hello! How are you?", [], "No tools for basic greeting"),
-        Test("Capabilities", "What can you help me with?", [], "Assistant introduction"),
-        
-        # # Vector search
-        # Test("Semantic Search: Romantic", "Show me romantic trips with wine and food", 
-        #      ['search_trips'], "Semantic search for romantic experiences"),
-        # Test("Semantic Search: Adventure", "Find adventure trips with hiking", 
-        #      ['search_trips'], "Semantic search for outdoor activities"),
-        
-        # # SQL queries
-        # Test("SQL: Budget", "Show me trips under $2000", ['sql_db_query'], "Filter by budget"),
-        # Test("SQL: Duration", "What trips are 7-10 days?", ['sql_db_query'], "Filter by duration"),
-        # Test("SQL: Country", "Find trips to Italy", ['sql_db_query'], "Filter by location"),
-        
-        # Complete trip planning
         Test("Trip Plan: Cultural London", 
              "I want to fly from Warsaw to London from November 5-10, 2025. " +
              "Budget is 10000 USD for 2 adults. Need flights and a hotel in central London. " +
