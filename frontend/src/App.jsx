@@ -1,4 +1,5 @@
 import Layout from "./components/Layout";
+import TripPlanContainer from "./components/TripPlanContainer";
 import "./App.css";
 import { useState, useEffect } from "react";
 import { BsRobot } from "react-icons/bs";
@@ -10,39 +11,6 @@ import {
   InfoBox,
 } from "@react-google-maps/api";
 import { API_BASE } from "./config";
-
-// Simple markdown renderer component
-const MarkdownRenderer = ({ content }) => {
-  if (!content) return null;
-  
-  // Convert markdown to HTML-like JSX
-  const formatMarkdown = (text) => {
-    return text
-      // Bold text **text** -> <strong>text</strong>
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      // Italic text *text* -> <em>text</em>
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      // Headers ## text -> <h3>text</h3>
-      .replace(/^## (.*$)/gim, '<h3>$1</h3>')
-      // Headers ### text -> <h4>text</h4>
-      .replace(/^### (.*$)/gim, '<h4>$1</h4>')
-      // Bullet points - text -> <li>text</li>
-      .replace(/^- (.*$)/gim, '<li>$1</li>')
-      // Numbered lists 1. text -> <li>text</li>
-      .replace(/^\d+\. (.*$)/gim, '<li>$1</li>')
-      // Line breaks
-      .replace(/\n/g, '<br/>');
-  };
-
-  const formattedContent = formatMarkdown(content);
-  
-  return (
-    <div 
-      dangerouslySetInnerHTML={{ __html: formattedContent }}
-      style={{ lineHeight: '1.6' }}
-    />
-  );
-};
 
 function App() {
   const [message, setMessage] = useState("");
@@ -326,54 +294,7 @@ function App() {
               ))}
               
               {/* Trip Plan Display */}
-              {(tripPlan.isGenerating || tripPlan.transport || tripPlan.accommodation || tripPlan.plan) && (
-                <div className="trip-plan-container">
-                  <div className="trip-plan-header">
-                    <h3>Your Trip Plan</h3>
-                    {tripPlan.isGenerating && (
-                      <div className="trip-plan-loading">
-                        <div className="loading-spinner"></div>
-                        <span>Generating your trip...</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="trip-plan-content">
-                    {tripPlan.transport && (
-                      <div className="trip-plan-box transport-box">
-                        <div className="trip-plan-box-header">
-                          <h4>🚗 Transportation</h4>
-                        </div>
-                        <div className="trip-plan-box-content">
-                          <MarkdownRenderer content={tripPlan.transport} />
-                        </div>
-                      </div>
-                    )}
-                    
-                    {tripPlan.accommodation && (
-                      <div className="trip-plan-box accommodation-box">
-                        <div className="trip-plan-box-header">
-                          <h4>🏨 Accommodation</h4>
-                        </div>
-                        <div className="trip-plan-box-content">
-                          <MarkdownRenderer content={tripPlan.accommodation} />
-                        </div>
-                      </div>
-                    )}
-                    
-                    {tripPlan.plan && (
-                      <div className="trip-plan-box plan-box">
-                        <div className="trip-plan-box-header">
-                          <h4>🗓️ Detailed Plan</h4>
-                        </div>
-                        <div className="trip-plan-box-content">
-                          <MarkdownRenderer content={tripPlan.plan} />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+              <TripPlanContainer tripPlan={tripPlan} />
             </div>
             <form className="chat-input-row" onSubmit={handleSend}>
               <input

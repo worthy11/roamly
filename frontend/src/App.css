@@ -376,6 +376,7 @@
   background: #e6b474;
   padding: 0.8rem 1rem;
   border-bottom: 1px solid #d7ab75;
+  text-align: center;
 }
 
 .trip-plan-box-header h4 {
@@ -393,6 +394,7 @@
   font-size: 0.95rem;
   white-space: pre-wrap;
   word-break: break-word;
+  text-align: left;
 }
 
 /* Markdown content styling */
