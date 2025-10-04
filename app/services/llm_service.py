@@ -8,19 +8,25 @@ import os
 import json
 import re
 from dotenv import load_dotenv
+from tavily import TavilyClient
 
 load_dotenv(override=True)
 
 class LLMService:
     def __init__(self):
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        tavily_api_key = os.getenv("TAVILY_API_KEY")
+        if not openai_api_key:
             raise ValueError("OPENAI_API_KEY not found in .env file")
+        if not tavily_api_key:
+            raise ValueError("TAVILY_API_KEY not found in .env file")
         
+        self.tavily_client = TavilyClient(api_key=tavily_api_key)
+
         self.llm = ChatOpenAI(
             model="gpt-4o-mini",
             temperature=0.7,
-            api_key=api_key
+            api_key=openai_api_key
         )
         
         sql_tool = get_sql_tool()
