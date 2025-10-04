@@ -3,11 +3,18 @@ import { BsRobot } from "react-icons/bs";
 import './Chat.css';
 import { API_BASE } from "../config";
 import TripForm from './TripForm';
+import TripPlanContainer from './TripPlanContainer';
 
 function Chat() {
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
-  const [formOpen, setFormOpen] = useState(false); // nowy stan
+  const [formOpen, setFormOpen] = useState(false);
+  const [tripPlan, setTripPlan] = useState({
+    transport: '',
+    accommodation: '',
+    plan: '',
+    isGenerating: false
+  });
 
   const sendMessage = async (text) => {
     const userMessage = { from: "user", text };
@@ -45,6 +52,117 @@ function Chat() {
     }
   };
 
+  const handleFormSubmit = async (formData) => {
+    // Close the form
+    setFormOpen(false);
+
+    // Convert form data to a formatted string message
+    const tripQuery = `I want to plan a trip with the following details:
+- From: ${formData.from}
+- To: ${formData.to}
+- Preferred transport: ${formData.transport || 'any'}
+- Number of people: ${formData.people}
+- Travel dates: ${formData.dateFrom} to ${formData.dateTo}
+- Activity level: ${formData.activity || 'moderate'}
+- Preferred population: ${formData.population || 'any'}
+- Budget: ${formData.budget ? `$${formData.budget}` : 'flexible'}
+- Key attractions/interests: ${formData.attractions || 'general sightseeing'}`;
+
+    // Add user message to chat
+    const userMessage = { 
+      from: "user", 
+      text: `Planning a trip from ${formData.from} to ${formData.to}...` 
+    };
+    setChat((prev) => [...prev, userMessage]);
+
+    // Reset trip plan and set generating state
+    setTripPlan({
+      transport: '',
+      accommodation: '',
+      plan: '',
+      isGenerating: true
+    });
+
+    try {
+      const response = await fetch(`${API_BASE}/chat/generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: 0,
+          message: tripQuery,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            
+            if (data === '[DONE]') {
+              setTripPlan(prev => ({ ...prev, isGenerating: false }));
+              continue;
+            }
+
+            try {
+              const parsed = JSON.parse(data);
+              const { stage, result } = parsed;
+              
+              // Extract the actual output text from the agent response object
+              const extractOutput = (agentResult) => {
+                if (typeof agentResult === 'string') {
+                  return agentResult;
+                }
+                if (agentResult && typeof agentResult === 'object') {
+                  // If it has an 'output' field, use that
+                  if (agentResult.output) {
+                    return agentResult.output;
+                  }
+                  // If it's an object without 'output', stringify it
+                  return JSON.stringify(agentResult);
+                }
+                return String(agentResult);
+              };
+              
+              const outputText = extractOutput(result);
+              
+              if (stage === 'transport') {
+                setTripPlan(prev => ({ ...prev, transport: outputText }));
+              } else if (stage === 'accommodation') {
+                setTripPlan(prev => ({ ...prev, accommodation: outputText }));
+              } else if (stage === 'plan') {
+                setTripPlan(prev => ({ ...prev, plan: outputText }));
+              }
+            } catch (e) {
+              console.error('Error parsing SSE data:', e);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error generating trip:", error);
+      setTripPlan(prev => ({ ...prev, isGenerating: false }));
+      setChat((prev) => [
+        ...prev,
+        { from: "bot", text: "Error generating trip: " + error.message },
+      ]);
+    }
+  };
+
   const handleSend = (e) => {
     e.preventDefault();
     if (message.trim() === "") return;
@@ -66,6 +184,9 @@ function Chat() {
             {msg.text}
           </div>
         ))}
+        
+        {/* Trip Plan Container - shows streaming trip plan */}
+        <TripPlanContainer tripPlan={tripPlan} />
       </div>
       <form className="chat-input-row" onSubmit={handleSend}>
         <input
@@ -86,7 +207,7 @@ function Chat() {
       </form>
 
       <div className={`trip-form-wrapper ${formOpen ? 'open' : ''}`}>
-        <TripForm onSubmit={sendMessage} />
+        <TripForm onSubmit={handleFormSubmit} />
       </div>
     </div>
   );

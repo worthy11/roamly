@@ -9,6 +9,7 @@ import requests
 import os
 import time
 import json
+from datetime import datetime
 from dotenv import load_dotenv
 from tavily import TavilyClient
 
@@ -90,28 +91,58 @@ def search_transport(origin: str, destination: str, date: str, passengers: int, 
     """Search for transport options (flights, trains, cars) and return best options.
     
     Args:
-        origin: Origin city IATA code
-        destination: Destination city IATA code
+        origin: Origin city name or IATA code
+        destination: Destination city name or IATA code
         date: Travel date in YYYY-MM-DD format
         passengers: Number of passengers
         pref_type: Preferred transport type ('plane', 'transit', 'car', or empty for all)
     """
+    print(f"\n{'='*80}")
+    print(f"SEARCH_TRANSPORT CALLED")
+    print(f"{'='*80}")
+    print(f"Parameters:")
+    print(f"  origin: {origin}")
+    print(f"  destination: {destination}")
+    print(f"  date: {date}")
+    print(f"  passengers: {passengers}")
+    print(f"  pref_type: {pref_type}")
+    print(f"{'='*80}\n")
+    
     options = []
+    errors = []
 
     if not pref_type or pref_type == "plane":
         flights = get_flights(origin, destination, date, passengers)
+        
         if flights and not isinstance(flights, dict):
             options.extend(flights)
+        elif isinstance(flights, dict) and "error" in flights:
+            errors.append(f"Flights: {flights['error']}")
         
     if not options or not pref_type or pref_type == "transit":
-        for train in get_transit(origin, destination, date, passengers):
-            options.append(train)
+        transit_result = get_transit(origin, destination, date, passengers)
+        
+        if isinstance(transit_result, dict) and "error" in transit_result:
+            errors.append(f"Transit: {transit_result['error']}")
+        else:
+            for train in transit_result:
+                options.append(train)
 
     if not options or not pref_type or pref_type == "car":
-        for car in get_car_routes(origin, destination, date, passengers):
-            options.append(car)
-
+        cars = get_car_routes(origin, destination, date, passengers)
+        
+        if isinstance(cars, dict) and "error" in cars:
+            errors.append(f"Cars: {cars['error']}")
+        else:
+            for car in cars:
+                options.append(car)
+    
     top_k = select_top_transport(options)
+    
+    # Add warnings if there are errors but we have some valid options
+    if errors and isinstance(top_k, dict) and "error" not in top_k:
+        top_k["warnings"] = errors
+    
     return top_k
 
 def get_flights(origin: str, destination: str, date: str, passengers: int):
@@ -128,6 +159,8 @@ def get_flights(origin: str, destination: str, date: str, passengers: int):
         return results
     except ResponseError as e:
         return {"error": str(e)}
+    except Exception as e:
+        return {"error": str(e)}
 
     async def _arun(self, *args, **kwargs):
         raise NotImplementedError
@@ -137,76 +170,159 @@ def estimate_co2(self, distance_km: float, passengers: int) -> float:
     return round(distance_km * factor * passengers, 2)
 
 def get_transit(origin, destination, date, passengers):
-    """Get transit options on a given date."""
+    """Get transit options using Google Routes API v2."""
+    print(f"\n{'='*80}")
+    print(f"GET_TRANSIT CALLED")
+    print(f"{'='*80}")
+    print(f"Parameters received:")
+    print(f"  origin: {origin}")
+    print(f"  destination: {destination}")
+    print(f"  date: {date}")
+    print(f"  passengers: {passengers}")
+    
     try:
-        url = "https://maps.googleapis.com/maps/api/directions/json"
-        params = {
-            "origin": origin,
-            "destination": destination,
-            "mode": "transit",
-            "transit_mode": "train",
-            "departure_time": date if date != "now" else int(time.time()),
-            "key": os.getenv("GOOGLE_API_KEY"),
-            "alternatives": "true"
+        google_api_key = os.getenv("GOOGLE_API_KEY")
+        print(f"  API key present: {bool(google_api_key)}")
+        
+        # Convert date to Unix timestamp
+        if date == "now":
+            departure_timestamp = int(time.time())
+        else:
+            try:
+                date_obj = datetime.strptime(date, "%Y-%m-%d")
+                departure_timestamp = int(date_obj.timestamp())
+            except ValueError:
+                departure_timestamp = int(time.time())
+        
+        url = "https://routes.googleapis.com/directions/v2:computeRoutes"
+        headers = {
+            "Content-Type": "application/json; charset=utf-8",
+            "X-Goog-Api-Key": google_api_key,
+            "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.legs.steps.transitDetails"
         }
-        resp = requests.get(url, params=params)
+        
+        # Convert timestamp to RFC3339 format
+        departure_time_rfc3339 = datetime.fromtimestamp(departure_timestamp).strftime("%Y-%m-%dT%H:%M:%SZ")
+        
+        # Routes API v2 request body
+        body = {
+            "origin": {
+                "address": origin
+            },
+            "destination": {
+                "address": destination
+            },
+            "travelMode": "TRANSIT",
+            "transitPreferences": {
+                "routingPreference": "LESS_WALKING"
+            },
+            "departureTime": departure_time_rfc3339,
+            "computeAlternativeRoutes": True
+        }
+        
+        print(f"\nRequest details:")
+        print(f"  URL: {url}")
+        print(f"  Departure time (RFC3339): {departure_time_rfc3339}")
+        
+        resp = requests.post(url, headers=headers, json=body)
         data = resp.json()
+        
+        print(f"\nAPI Response:")
+        print(f"  Status code: {resp.status_code}")
+        print(f"  Response data:")
+        import json as json_lib
+        print(json_lib.dumps(data, indent=2, ensure_ascii=False))
 
         routes = []
-        for route in data.get("routes", [])[:3]:
-            leg = route["legs"][0]
+        if "routes" in data:
+            for route in data["routes"][:3]:
+                leg = route["legs"][0]
+                
+                # Extract basic info
+                duration_seconds = int(route["duration"].replace("s", ""))
+                distance_meters = int(route["distanceMeters"])
+                
+                # Convert duration to readable format
+                hours = duration_seconds // 3600
+                minutes = (duration_seconds % 3600) // 60
+                duration_text = f"{hours}h {minutes}m" if hours > 0 else f"{minutes}m"
+                
+                # Calculate CO2 (transit is more eco-friendly)
+                distance_km = distance_meters / 1000
+                co2_factor = 0.05  # Transit CO2 factor
+                co2 = round(distance_km * co2_factor * passengers, 2)
+                
+                # Extract fare information (if available)
+                fare_info = route.get("fare", {})
+                price = fare_info.get("value") if fare_info else None
+                currency = fare_info.get("currency") if fare_info else None
+                
+                # Extract transit details and times from steps
+                transit_details = []
+                first_departure = None
+                last_arrival = None
+                
+                if "steps" in leg:
+                    for step in leg["steps"]:
+                        if step.get("travelMode") == "TRANSIT":
+                            transit_info = step.get("transitDetails", {})
+                            if transit_info:
+                                line_info = transit_info.get("transitLine", {})
+                                
+                                # Capture first departure and last arrival times
+                                dep_time = transit_info.get("departureTime", "")
+                                arr_time = transit_info.get("arrivalTime", "")
+                                
+                                if not first_departure and dep_time:
+                                    first_departure = dep_time
+                                if arr_time:
+                                    last_arrival = arr_time
+                                
+                                transit_details.append({
+                                    "line": line_info.get("nameShort", line_info.get("name", "Unknown")),
+                                    "vehicle": line_info.get("vehicle", {}).get("type", "Unknown"),
+                                    "agency": line_info.get("agencies", [{}])[0].get("name", "Unknown") if line_info.get("agencies") else "Unknown",
+                                    "departure_stop": transit_info.get("stopDetails", {}).get("departureStop", {}).get("name", "Unknown"),
+                                    "arrival_stop": transit_info.get("stopDetails", {}).get("arrivalStop", {}).get("name", "Unknown"),
+                                    "departure_time": dep_time,
+                                    "arrival_time": arr_time
+                                })
+                
+                departure_time = first_departure if first_departure else f"Departs at {departure_time_rfc3339}"
+                arrival_time = last_arrival if last_arrival else f"Arrives {duration_text} later"
+                
+                routes.append({
+                    "mode": "transit",
+                    "provider": "Google Routes API",
+                    "price": price if price else 0,
+                    "currency": currency,
+                    "duration": duration_text,
+                    "seats_available": None,
+                    "co2_kg": co2,
+                    "details": {
+                        "from": origin,
+                        "to": destination,
+                        "departure": departure_time,
+                        "arrival": arrival_time,
+                        "transit_details": transit_details
+                    }
+                })
 
-            departure = leg["departure_time"]["text"]
-            arrival = leg["arrival_time"]["text"]
-            duration = leg["duration"]["text"]
-            distance_m = leg["distance"]["value"]
-
-            mode_type = "transit"
-            fare = route.get("fare")
-            price = float(fare["value"]) if fare else None
-            currency = fare["currency"] if fare else None
-
-            stops = []
-            for step in leg["steps"]:
-                if step.get("travel_mode") == "TRANSIT":
-                    vehicle_type = step["transit_details"]["line"]["vehicle"]["type"]
-                    if vehicle_type == "BUS":
-                        mode_type = "bus"
-                    elif vehicle_type in ("HEAVY_RAIL", "RAIL", "SUBWAY"):
-                        mode_type = "train"
-                    else:
-                        mode_type = "transit"
-
-                    stops.append(step["transit_details"]["headsign"])
-
-            distance_km = distance_m / 1000
-            if mode_type == "bus":
-                factor = 0.1
-            elif mode_type == "train":
-                factor = 0.02
-            else:
-                factor = 0.05
-            co2 = round(distance_km * factor * passengers, 2)
-
-            routes.append({
-                "mode": mode_type,
-                "provider": "Google Transit",
-                "price": price,
-                "currency": currency,
-                "duration": duration,
-                "seats_available": None,
-                "co2_kg": co2,
-                "details": {
-                    "from": leg["start_address"],
-                    "to": leg["end_address"],
-                    "departure": departure,
-                    "arrival": arrival,
-                    "stops": stops
-                }
-            })
-
+        print(f"\nParsed routes:")
+        print(f"  Number of routes: {len(routes)}")
+        if routes:
+            print(f"  First route summary:")
+            print(f"    Duration: {routes[0]['duration']}")
+            print(f"    Price: {routes[0]['price']} {routes[0]['currency']}" if routes[0]['price'] else "    Price: Not available")
+            print(f"    Transit details: {len(routes[0]['details']['transit_details'])} leg(s)")
+        print(f"{'='*80}\n")
+        
         return routes
     except Exception as e:
+        print(f"\nERROR in get_transit: {e}")
+        import traceback
+        traceback.print_exc()
+        print(f"{'='*80}\n")
         return {"error": str(e)}
 
     async def _arun(self, *args, **kwargs):
@@ -216,16 +332,18 @@ def get_car_routes(origin: str, destination: str, fuel_type: str = "gasoline",
              consumption_l_per_100km: float = 7.0, fuel_price_per_l: float = 1.8,
              passengers: int = 1, seats: int = 4):
     """Find driving routes, cost, and CO2 estimates using Google Maps Routes API."""
-
     try:
+        google_api_key = os.getenv("GOOGLE_API_KEY")
+        
         url = "https://routes.googleapis.com/v2/routes:computeRoutes"
-        headers = {"Content-Type": "application/json", "X-Goog-Api-Key": os.getenv("GOOGLE_API_KEY")}
+        headers = {"Content-Type": "application/json", "X-Goog-Api-Key": google_api_key}
         body = {
             "origin": {"address": origin},
             "destination": {"address": destination},
             "travelMode": "DRIVE",
             "routingPreference": "TRAFFIC_AWARE"
         }
+        
         resp = requests.post(url, headers=headers, json=body)
         data = resp.json()
 
@@ -274,13 +392,16 @@ def select_top_transport(options: list):
     if not options:
         return {}
     
-    # cheapest = min(options, key=lambda x: x.get("price", float('inf')))
-    # eco_options = [o for o in options if o.get("co2_kg")]
-    # eco = min(eco_options, key=lambda x: x["co2_kg"]) if eco_options else None
+    # Find cheapest option
+    cheapest = min(options, key=lambda x: x.get("price", float('inf')))
+    
+    # Find most eco-friendly option
+    eco_options = [o for o in options if o.get("co2_kg") is not None]
+    eco = min(eco_options, key=lambda x: x["co2_kg"]) if eco_options else cheapest
     
     return {
-        "cheapest": options[0],
-        "eco": options[0],
+        "cheapest": cheapest,
+        "eco": eco,
     }
 
 @tool

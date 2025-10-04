@@ -23,17 +23,8 @@ function TripForm({ onSubmit }) {
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    const text = `I want to plan a trip with the following details:
-Where from: ${formData.from}
-Where to: ${formData.to}
-Means of transport: ${formData.transport}
-Number of people: ${formData.people}
-From: ${formData.dateFrom} to ${formData.dateTo}
-Activity level: ${formData.activity}
-Population number: ${formData.population}
-Budget: ${formData.budget}
-Key attractions / points of interest: ${formData.attractions}`;
-    onSubmit(text);
+    // Pass the form data object directly to the parent
+    onSubmit(formData);
   };
 
   return (
