@@ -83,12 +83,12 @@ class LLMService:
                     if trip_plan.daily_plan:
                         print(f"\n🗓️ DETAILED DAY-BY-DAY PLAN:")
                         for day_plan in trip_plan.daily_plan:
-                            print(f"\n  📅 Day {day_plan.get('day', 'N/A')} - {day_plan.get('date', 'N/A')}")
-                            print(f"  🎯 Major Attractions: {', '.join(day_plan.get('major_attractions', []))}")
-                            print(f"  🚌 Transport: {day_plan.get('transport_info', 'N/A')}")
-                            print(f"  ⏰ Schedule: {day_plan.get('time_schedule', 'N/A')}")
-                            if day_plan.get('notes'):
-                                print(f"  💡 Notes: {day_plan.get('notes')}")
+                            print(f"\n  📅 Day {day_plan.day} - {day_plan.date}")
+                            print(f"  🎯 Major Attractions: {', '.join(day_plan.major_attractions)}")
+                            print(f"  🚌 Transport: {day_plan.transport_info}")
+                            print(f"  ⏰ Schedule: {day_plan.time_schedule}")
+                            if day_plan.notes:
+                                print(f"  💡 Notes: {day_plan.notes}")
                     
                     print("="*80 + "\n")
                     
