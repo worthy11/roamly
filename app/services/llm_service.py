@@ -31,7 +31,7 @@ class LLMService:
         self.prompts = get_chat_prompts()
 
         sql_tools = get_sql_tool()
-        transport_tools = [search_transport]
+        transport_tools = [search_transport, web_search]
         accommodation_tools = [search_hotels]
         planning_tools = [format_trip_summary, web_search]
         common_tools = sql_tools + [search_trips]
