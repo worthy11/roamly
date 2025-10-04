@@ -87,7 +87,7 @@ def normalize_flight(offer):
     }
 
 @tool
-def search_transport(origin: str, destination: str, date: str, passengers: int, pref_type: str = "") -> str:
+def search_transport(origin: str, destination: str, date: str, passengers: int=1, pref_type: str = "") -> str:
     """Search for transport options (flights, trains, cars) and return best options.
     
     Args:
@@ -403,54 +403,6 @@ def select_top_transport(options: list):
         "cheapest": cheapest,
         "eco": eco,
     }
-
-@tool
-def format_trip_summary(destination: str, duration_days: int, transport_info: str, hotel_info: str, preferences: str = "") -> str:
-    """Format transport and hotel search results into a structured trip summary. 
-    Use ONLY after you have already called search_transport AND search_hotels.
-    
-    Args:
-        destination: The destination city or country
-        duration_days: Number of days for the trip
-        transport_info: The complete output string from search_transport tool
-        hotel_info: The complete output string from search_hotels tool
-        preferences: Additional user preferences or requirements
-    """
-    from app.utils.prompts import get_trip_summary_prompt
-    
-    api_key = os.getenv("OPENAI_API_KEY")
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7, api_key=api_key)
-    
-    structured_llm = llm.with_structured_output(TripPlan)
-    prompt = get_trip_summary_prompt(destination, duration_days, transport_info, hotel_info, preferences)
-    
-    try:
-        trip_plan = structured_llm.invoke(prompt)
-        
-        # Return as JSON with a special marker for the service to parse
-        result = {
-            "structured_output": True,
-            "trip_plan": trip_plan.model_dump(),
-            "text_summary": f"""Trip to {trip_plan.destination} ({trip_plan.duration_days})
-
-🚗 Travel: {trip_plan.travel[:200]}...
-
-🏨 Accommodation: {trip_plan.accommodation[:200]}...
-
-💰 Costs: {trip_plan.costs[:150]}...
-
-🗓️ Daily plan: {len(trip_plan.daily_plan)} days planned with personalized attractions and local transport info..."""
-        }
-        
-        # Ensure JSON serialization works properly
-        json_output = json.dumps(result, ensure_ascii=False)
-        return f"__STRUCTURED__{json_output}__STRUCTURED__"
-    except Exception as e:
-        print(f"❌ Error in format_trip_summary: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return f"Error planning trip: {str(e)}"
-
 
 @tool
 def search_hotels(city_code: str, check_in_date: str, check_out_date: str, adults: int = 2, room_quantity: int = 1, children: int = 0) -> str:

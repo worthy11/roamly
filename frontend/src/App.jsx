@@ -13,6 +13,12 @@ function App() {
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedAttractions, setSelectedAttractions] = useState([]);
+
+  const handleAttractionSelect = (attractions) => {
+    setSelectedAttractions(attractions);
+    console.log("Set in App");
+  };
 
   useEffect(() => {
     const fetchTrips = async () => {
@@ -42,6 +48,7 @@ function App() {
         trips={trips}
         selectedTrip={selectedTrip}
         setSelectedTrip={setSelectedTrip}
+        selectedAttractions={selectedAttractions}
       />
 
       {!isChatOpen && (
@@ -62,7 +69,7 @@ function App() {
         >
           X
         </button>
-        <Chat />
+        <Chat onSelectAttractions={handleAttractionSelect} />
       </div>
 
       <div className={`slide-down-form ${isFormOpen ? "open" : ""}`}>

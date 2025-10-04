@@ -6,7 +6,7 @@ import TripForm from "./TripForm";
 import TripPlanContainer from "./TripPlanContainer";
 import { getSessionId } from "../session";
 
-function Chat() {
+function Chat({ onSelectAttractions }) {
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
   const [formOpen, setFormOpen] = useState(false);
@@ -69,6 +69,7 @@ function Chat() {
 - Key attractions/interests: ${formData.attractions || "general sightseeing"}`;
 
     // Add user message to chat
+    const sid = getSessionId();
     const userMessage = {
       from: "user",
       text: `Planning a trip from ${formData.from} to ${formData.to}...`,
@@ -89,7 +90,7 @@ function Chat() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user_id: 0,
+          session_id: sid,
           message: tripQuery,
         }),
       });
@@ -120,6 +121,7 @@ function Chat() {
             try {
               const parsed = JSON.parse(data);
               const { stage, result } = parsed;
+              console.log(result);
 
               // Extract the actual output text from the agent response object
               const extractOutput = (agentResult) => {
@@ -185,7 +187,10 @@ function Chat() {
         ))}
 
         {/* Trip Plan Container - shows streaming trip plan */}
-        <TripPlanContainer tripPlan={tripPlan} />
+        <TripPlanContainer
+          tripPlan={tripPlan}
+          onSelectAttractions={onSelectAttractions}
+        />
       </div>
       <form className="chat-input-row" onSubmit={handleSend}>
         <input

@@ -1,6 +1,6 @@
-import TripPlanBox from './TripPlanBox';
+import TripPlanBox from "./TripPlanBox";
 
-const TripPlanContainer = ({ tripPlan }) => {
+const TripPlanContainer = ({ tripPlan, onSelectAttractions }) => {
   const { transport, accommodation, plan, isGenerating } = tripPlan;
 
   // Don't render if no content and not generating
@@ -19,27 +19,30 @@ const TripPlanContainer = ({ tripPlan }) => {
           </div>
         )}
       </div>
-      
+
       <div className="trip-plan-content">
         <TripPlanBox
           type="transport"
           title="Transportation"
           content={transport}
           icon="🚗"
+          onSelectAttractions={onSelectAttractions}
         />
-        
+
         <TripPlanBox
           type="accommodation"
           title="Accommodation"
           content={accommodation}
           icon="🏨"
+          onSelectAttractions={onSelectAttractions}
         />
-        
+
         <TripPlanBox
           type="plan"
           title="Detailed Plan"
           content={plan}
           icon="🗓️"
+          onSelectAttractions={onSelectAttractions}
         />
       </div>
     </div>

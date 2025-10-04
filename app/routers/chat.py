@@ -3,7 +3,9 @@ from app.services.llm_service import llm_service
 from fastapi.responses import StreamingResponse
 from fastapi import APIRouter, HTTPException
 import json
-import asyncio
+from app.utils.sessions import get_history, update_session
+from app.models import trip_plan_parser
+from pydantic import ValidationError
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -24,9 +26,18 @@ async def chat(request: ChatRequest):
         accommodation_output = accommodation_result.get("output", str(accommodation_result))
         yield f"data: {json.dumps({'stage': 'accommodation', 'result': accommodation_output})}\n\n"
 
-        plan_result = await llm_service.run("planner", f"Transport options: {transport_output}\n\nAccommodation result: {accommodation_output}\n\nYour query: {query}")
-        plan_output = plan_result.get("output", str(plan_result))
-        yield f"data: {json.dumps({'stage': 'plan', 'result': plan_output})}\n\n"
+        modified_query = query
+        for attempt in range(3):
+            plan_result = await llm_service.stream("planner", f"User query: {modified_query}, Transport options: {transport_output}, Accommodation options: {accommodation_output}", history)
+            plan_output = plan_result.get("output", str(plan_result))
+            try:
+                trip_plan = json.loads(plan_output)
+                json_str = json.dumps(trip_plan)  # serialize again to ensure valid JSON
+                yield f"data: {json.dumps({'stage': 'plan', 'result': plan_output})}\n\n"
+                break
+            except json.JSONDecodeError as e:
+                print(f"[Warning] Invalid JSON on attempt {attempt+1}: {e}")
+                modified_query = f"Previous output was invalid JSON:\n{plan_output}\nPlease return valid JSON only."
 
         yield "data: [DONE]\n\n"
     return StreamingResponse(event_stream(), media_type="text/event-stream")
