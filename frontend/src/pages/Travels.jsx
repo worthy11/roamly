@@ -1,6 +1,7 @@
 import Layout from "../components/Layout";
 import { useState } from "react";
 import { API_BASE } from "../config";
+import "./Travels.css";
 
 function Travel() {
   const [country, setCountry] = useState("");
@@ -39,17 +40,19 @@ function Travel() {
 
   return (
     <Layout>
-      <h1>Create a new Trip</h1>
-      <form onSubmit={handleSubmit}>
-        <input placeholder="Country" value={country} onChange={e => setCountry(e.target.value)} required />
-        <input placeholder="Description" value={description} onChange={e => setDescription(e.target.value)} />
-        <input type="number" placeholder="Duration (days)" value={duration} onChange={e => setDuration(e.target.value)} />
-        <input type="number" placeholder="Number of People" value={numPeople} onChange={e => setNumPeople(e.target.value)} />
-        <input placeholder="Activity Level" value={activityLevel} onChange={e => setActivityLevel(e.target.value)} />
-        <input type="number" placeholder="Budget" value={budget} onChange={e => setBudget(e.target.value)} />
-        <input placeholder="Cities (comma separated)" value={cities} onChange={e => setCities(e.target.value)} />
-        <button type="submit">Create Trip</button>
-      </form>
+      <div className="trip-form">
+        <h1 className="trip-form-title">Create a new Trip</h1>
+        <form className="trip-form-fields" onSubmit={handleSubmit}>
+          <input placeholder="Country" value={country} onChange={e => setCountry(e.target.value)} required />
+          <input placeholder="Description" value={description} onChange={e => setDescription(e.target.value)} />
+          <input type="number" placeholder="Duration (days)" value={duration} onChange={e => setDuration(e.target.value)} />
+          <input type="number" placeholder="Number of People" value={numPeople} onChange={e => setNumPeople(e.target.value)} />
+          <input placeholder="Activity Level" value={activityLevel} onChange={e => setActivityLevel(e.target.value)} />
+          <input type="number" placeholder="Budget" value={budget} onChange={e => setBudget(e.target.value)} />
+          <input placeholder="Cities (comma separated)" value={cities} onChange={e => setCities(e.target.value)} />
+          <button type="submit">Create Trip</button>
+        </form>
+      </div>
     </Layout>
   );
 }

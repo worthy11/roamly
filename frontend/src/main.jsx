@@ -6,9 +6,11 @@ import App from './App.jsx'
 import Travel from './pages/Travels.jsx'
 import ErrorPage from './pages/ErrorPage.jsx'
 import Chat from './pages/Chat.jsx'
+import Login from './Login.jsx'
 
 const router = createBrowserRouter([
-  {path: "/", element: <App />},
+  {path: "/", element: <Login />},
+  {path: "/app", element: <App />},
   {path: "/travels", element: <Travel />},
   {path: "*", element: <ErrorPage />},
   {path: "/chat", element: <Chat /> }
