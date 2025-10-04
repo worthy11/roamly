@@ -29,35 +29,35 @@ function App() {
   }, []);
 
   const handleChatClose = () => {
-      setIsChatOpen(false);
+    setIsChatOpen(false);
 
-      setIsFormOpen(false);
-    };
+    setIsFormOpen(false);
+  };
 
   return (
     <Layout>
       <Navbar onOpenForm={() => setIsFormOpen(true)} />
 
-      <Map 
+      <Map
         trips={trips}
         selectedTrip={selectedTrip}
         setSelectedTrip={setSelectedTrip}
       />
 
       {!isChatOpen && (
-        <button 
-          className="open-chatbot-btn" 
+        <button
+          className="open-chatbot-btn"
           onClick={() => setIsChatOpen(true)}
         >
-          <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             Open ChatBot <BsRobot size={25} />
           </span>
         </button>
       )}
 
       <div className={`chat-form-wrapper ${isChatOpen ? "open" : ""}`}>
-        <button 
-          className="close-chatbot-btn" 
+        <button
+          className="close-chatbot-btn"
           onClick={() => setIsChatOpen(false)}
         >
           X
@@ -66,14 +66,11 @@ function App() {
       </div>
 
       <div className={`slide-down-form ${isFormOpen ? "open" : ""}`}>
-  <button 
-    className="close-form-btn"
-    onClick={() => setIsFormOpen(false)}
-  >
-    ×
-  </button>
-  <Travel />
-</div>
+        <button className="close-form-btn" onClick={() => setIsFormOpen(false)}>
+          ×
+        </button>
+        <Travel />
+      </div>
     </Layout>
   );
 }
