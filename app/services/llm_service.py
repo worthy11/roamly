@@ -2,13 +2,12 @@ from langchain_openai import ChatOpenAI
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from typing import List, Dict, Optional, Tuple
 from app.utils.prompts import get_chat_prompts
-from app.utils.tools import search_trips, get_sql_tool, format_trip_summary, search_transport, search_hotels
+from app.utils.tools import search_trips, get_sql_tool, format_trip_summary, search_transport, search_hotels, web_search
 from app.models import TripPlan
 import os
 import json
 import re
 from dotenv import load_dotenv
-from tavily import TavilyClient
 import asyncio
 
 load_dotenv(override=True)
@@ -22,7 +21,6 @@ class LLMService:
         if not tavily_api_key:
             raise ValueError("TAVILY_API_KEY not found in .env file")
         
-        self.tavily_client = TavilyClient(api_key=tavily_api_key)
 
         self.llm = ChatOpenAI(
             model="gpt-4o-mini",
@@ -35,7 +33,7 @@ class LLMService:
         sql_tools = get_sql_tool()
         transport_tools = [search_transport]
         accommodation_tools = [search_hotels]
-        planning_tools = [format_trip_summary]
+        planning_tools = [format_trip_summary, web_search]
         common_tools = sql_tools + [search_trips]
 
         self.agents = {
