@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState } from "react";
 import { FaSuitcase } from "react-icons/fa";
-import './TripForm.css';
+import "./TripForm.css";
 
 function TripForm({ onSubmit, onClose }) { // Add onClose prop
   const [formData, setFormData] = useState({
@@ -123,4 +123,3 @@ function TripForm({ onSubmit, onClose }) { // Add onClose prop
 }
 
 export default TripForm;
-
