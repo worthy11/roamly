@@ -93,7 +93,7 @@ class TripRead(BaseModel):
     model_config = dict(from_attributes=True)
 
 class ChatRequest(BaseModel):
-    user_id: int
+    session_id: str
     message: str
 
 class Attraction(BaseModel):
@@ -121,7 +121,6 @@ class TripPlan(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
-    user_id: int
     trip_plan: Optional[TripPlan] = None
 
 class TripRequest(BaseModel):

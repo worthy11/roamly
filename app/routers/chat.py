@@ -4,19 +4,26 @@ from fastapi.responses import StreamingResponse
 from fastapi import APIRouter, HTTPException
 import json
 from app.utils.sessions import get_history, update_session
-from app.models import trip_plan_parser
-from pydantic import ValidationError
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 @router.post("/text", response_model=ChatResponse)
 def chat(request: ChatRequest):
-    response = str(llm_service.chat(request.message))
-    return ChatResponse(response=response, user_id=request.user_id)
+    query = request.message
+    history = get_history(request.session_id)
+    
+    response = llm_service.chat(query, history)
+    update_session(request.session_id, "user", query)
+    update_session(request.session_id, "assisstant", response)
+
+    return ChatResponse(response=response)
 
 @router.post("/generate", response_model=TripPlan)
 async def chat(request: ChatRequest):
     query = request.message
+    history = get_history(request.session_id)
+    
+    plan_output = ""
     async def event_stream():
         transport_result = await llm_service.run("transport", query)
         transport_output = transport_result.get("output", str(transport_result))
@@ -28,7 +35,7 @@ async def chat(request: ChatRequest):
 
         modified_query = query
         for attempt in range(3):
-            plan_result = await llm_service.stream("planner", f"User query: {modified_query}, Transport options: {transport_output}, Accommodation options: {accommodation_output}", history)
+            plan_result = await llm_service.run("planner", f"User query: {modified_query}, Transport options: {transport_output}, Accommodation options: {accommodation_output}", history)
             plan_output = plan_result.get("output", str(plan_result))
             try:
                 trip_plan = json.loads(plan_output)
@@ -40,5 +47,9 @@ async def chat(request: ChatRequest):
                 modified_query = f"Previous output was invalid JSON:\n{plan_output}\nPlease return valid JSON only."
 
         yield "data: [DONE]\n\n"
+
+    update_session(request.session_id, "user", query)
+    update_session(request.session_id, "assisstant", plan_output)
+
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 

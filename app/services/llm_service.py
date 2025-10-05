@@ -5,6 +5,8 @@ from app.utils.prompts import get_chat_prompts
 from app.utils.tools import search_trips, get_sql_tool, search_transport, search_hotels, web_search
 from dotenv import load_dotenv
 import asyncio
+import os
+import dotenv
 
 load_dotenv(override=True)
 
