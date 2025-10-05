@@ -371,4 +371,91 @@
   cursor: pointer;
 }
 
+.trip-plan-box.plan-box {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
 
+/* Container */
+.trip-plan-box.plan-box {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Daily plan day card */
+.daily-plan-day {
+  background: #fff;
+  border-radius: 0.75rem;
+  border: 1px solid #e0e0e0;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s ease;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+
+.daily-plan-day:hover {
+  border-color: #007bff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Header of each day */
+.daily-plan-header.clickable {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.daily-plan-header strong {
+  font-size: 1rem;
+  color: #007bff;
+}
+
+.daily-plan-desc {
+  font-size: 0.875rem;
+  color: #555;
+}
+
+/* Expanded details */
+.daily-plan-details {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed #ccc;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Attractions list */
+.daily-plan-details ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.daily-plan-details li {
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  color: #333;
+}
+
+/* Notes and transport info */
+.daily-plan-details p {
+  font-size: 0.875rem;
+  margin: 0.25rem 0;
+  color: #444;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -2,13 +2,11 @@ from langchain_openai import ChatOpenAI
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from typing import List, Dict, Optional, Tuple
 from app.utils.prompts import get_chat_prompts
-from app.utils.tools import search_trips, get_sql_tool, format_trip_summary, search_transport, search_hotels, web_search
-from app.models import TripPlan
-import os
-import json
-import re
+from app.utils.tools import search_trips, get_sql_tool, search_transport, search_hotels, web_search
 from dotenv import load_dotenv
 import asyncio
+import os
+import dotenv
 
 load_dotenv(override=True)
 
@@ -33,7 +31,7 @@ class LLMService:
         sql_tools = get_sql_tool()
         transport_tools = [search_transport, web_search]
         accommodation_tools = [search_hotels]
-        planning_tools = [format_trip_summary, web_search]
+        planning_tools = [web_search]
         common_tools = sql_tools + [search_trips]
 
         self.agents = {

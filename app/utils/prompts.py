@@ -1,4 +1,6 @@
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.prompts import PromptTemplate
+from app.models import trip_plan_parser
 
 SQL_TOOL_DESCRIPTION = """Execute SQL queries on the trips database. Use this for specific criteria like budget, duration, activity level, country, number of people, or combinations. 
 
@@ -13,36 +15,6 @@ Examples:
 - Activity: SELECT * FROM trips WHERE activity_level = 'high'
 - Country: SELECT * FROM trips WHERE country LIKE '%Italy%'
 - Combined: SELECT * FROM trips WHERE budget < 2500 AND duration >= 7"""
-
-def get_trip_summary_prompt(destination: str, duration_days: int, transport_info: str, hotel_info: str, preferences: str = "") -> str:
-    return f"""Format the following trip search results into a structured summary:
-
-Destination: {destination}
-Duration: {duration_days} days
-User Preferences: {preferences}
-
-TRANSPORT OPTIONS FOUND:
-{transport_info}
-
-ACCOMMODATION OPTIONS FOUND:
-{hotel_info}
-
-Create a formatted summary with exactly these sections:
-
-1. destination (string): The destination name
-2. duration_days (string): Trip duration
-3. travel (string): Summarize the transport options found, highlighting the best choices with prices and times
-4. accommodation (string): Summarize the hotel options found, highlighting good value options with prices and locations
-5. costs (string): Calculate and present total estimated costs based on the actual prices from transport and hotels
-6. daily_plan (List[dict]): Detailed day-by-day itinerary with the following structure for each day:
-   - day (int): Day number (1, 2, 3, etc.)
-   - date (string): Date in YYYY-MM-DD format
-   - major_attractions (List[str]): List of major attractions/activities for that day, personalized based on user preferences
-   - transport_info (string): Information on how to get to attractions using local transport (buses, trains, metro, walking routes, etc.)
-   - time_schedule (string): Suggested timing for activities (morning, afternoon, evening)
-   - notes (string): Additional tips, recommendations, or important information for that day
-
-The daily_plan should be personalized based on the user's preferences and interests mentioned in their request. Include specific local transport options, routes, and practical information for getting around."""
 
 TRAVEL_ASSISTANT_SYSTEM_MESSAGE = """You are a helpful travel assistant. You help users find their perfect trip.
 
@@ -136,28 +108,37 @@ Format the output in a clean, easy-to-read way using markdown formatting where a
 """
 
 TRIP_PLANNER_PROMPT = """
-You are the Trip Planner Agent. Your task is to plan activities, visits, and local travel for the user’s trip.
+You are a trip planner. Format the following elements:
 
-You have access to a web search tool that can search for attractions, museums, restaurants, and public transport schedules, including opening hours and ticket prices.
+1. User query
+2. Transport options
+3. Accommodation options
 
-Rules:
-- Use details from previous stages (transport and accommodation) to determine the destination city, travel dates, and hotel location.  
-- Create a realistic itinerary that fits within the user's stay duration.  
-- Include daily schedules with activity names, locations, estimated visit durations, and travel times between points.  
-- Include ticket or entry prices where available.  
-- Ensure that all locations are open on the planned day and time.  
-- Prefer walking or public transport unless otherwise specified.
-- Check and account for events in the destination city that may disrupt the plans, use the web search tool to find potential obstacles and or safety risks. If you find anything important, include it in the plan.
-- Once the plan is complete, stop using tools and summarize it.
+according to this EXACT dictionary schema:
 
-IMPORTANT: Do NOT repeat transport or accommodation details in your daily plan. These are already covered in separate sections. Focus only on:
-- Daily activities and attractions
-- Local transportation between attractions (buses, metro, walking routes)
-- Restaurant recommendations for meals
-- Cultural events or special experiences
-- Practical tips for each day
+1. destination (string): The destination name
+2. duration_days (string): Trip duration
+3. travel (string): Summarize the transport options found, highlighting the best choices with prices and times
+4. accommodation (string): Summarize the hotel options found, highlighting good value options with prices and locations
+5. costs (string): Calculate and present total estimated costs based on the actual prices from transport and hotels
+6. daily_plan (List[dict]): Detailed day-by-day itinerary with the following structure for each day:
+   - day (int): Day number (1, 2, 3, etc.)
+   - date (string): Date in YYYY-MM-DD format
+   - description (string): Very short, preferably one-sentence description of the day.
+   - [OPTIONAL] major_attractions (List[dict]): List of attractions/activities with:
+       - name (string): Name of the attraction/activity
+       - time_of_day (string): Morning / Afternoon / Evening
+       - lat (float): Latitude
+       - lon (float): Longitude
+   - [OPTIONAL] transport_info (string): Information on how to get to attractions using local transport
+   - [OPTIONAL] time_schedule (string): Suggested timing for activities (morning, afternoon, evening)
+   - [OPTIONAL] notes (string): Additional tips, recommendations, or important information for that day
 
-Your final output should be well-formatted using markdown where appropriate. Use **bold** for day headers and important attractions, *italics* for times and prices, and ## headers for different sections. Present the itinerary as a narrative travel guide with descriptive paragraphs for each day, using bullet points only when listing multiple options or practical details. Make it feel like a personalized travel recommendation rather than a dry list.
+Your output will be parsed by a Pydantic parser, so do not include any additional text and follow the schema exactly.
+The elements marked as [OPTIONAL] are not always required; you are encouraged to include them, but do not force them.
+You should include more than one attraction per day, ideally more than 3, unless the day is a rest day. You may include food events, like restaurant visits, as attractions.
+Do not leave major_attractions empty if the day you are describing is not a rest day. Any activity is considered an attraction.
+The daily_plan should be personalized based on the user's preferences and interests mentioned in their request. Include specific local transport options, routes, and practical information for getting around.
 """
 
 def get_chat_prompts() -> ChatPromptTemplate:

@@ -1,22 +1,24 @@
-import { useState } from 'react';
+import { useState } from "react";
 import { BsRobot } from "react-icons/bs";
-import './Chat.css';
+import "./Chat.css";
 import { API_BASE } from "../config";
-import TripForm from './TripForm';
-import TripPlanContainer from './TripPlanContainer';
+import TripForm from "./TripForm";
+import TripPlanContainer from "./TripPlanContainer";
+import { getSessionId } from "../session";
 
-function Chat() {
+function Chat({ onSelectAttractions }) {
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
   const [formOpen, setFormOpen] = useState(false);
   const [tripPlan, setTripPlan] = useState({
-    transport: '',
-    accommodation: '',
-    plan: '',
-    isGenerating: false
+    transport: "",
+    accommodation: "",
+    plan: "",
+    isGenerating: false,
   });
 
   const sendMessage = async (text) => {
+    const sid = getSessionId();
     const userMessage = { from: "user", text };
     setChat((prev) => [...prev, userMessage]);
 
@@ -27,7 +29,7 @@ function Chat() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user_id: 0,
+          session_id: sid,
           message: text,
         }),
       });
@@ -39,7 +41,7 @@ function Chat() {
       const data = await response.json();
       const botMessage = { from: "bot", text: data.response };
       setChat((prev) => [...prev, botMessage]);
-      
+
       if (data.trip_plan) {
         console.log(data.trip_plan);
       }
@@ -53,31 +55,32 @@ function Chat() {
   };
 
   const handleFormSubmit = async (formData) => {
-
     setFormOpen(false);
 
     const tripQuery = `I want to plan a trip with the following details:
 - From: ${formData.from}
 - To: ${formData.to}
-- Preferred transport: ${formData.transport || 'any'}
+- Preferred transport: ${formData.transport || "any"}
 - Number of people: ${formData.people}
 - Travel dates: ${formData.dateFrom} to ${formData.dateTo}
-- Activity level: ${formData.activity || 'moderate'}
-- Preferred population: ${formData.population || 'any'}
-- Budget: ${formData.budget ? `$${formData.budget}` : 'flexible'}
-- Key attractions/interests: ${formData.attractions || 'general sightseeing'}`;
+- Activity level: ${formData.activity || "moderate"}
+- Preferred population: ${formData.population || "any"}
+- Budget: ${formData.budget ? `$${formData.budget}` : "flexible"}
+- Key attractions/interests: ${formData.attractions || "general sightseeing"}`;
 
-    const userMessage = { 
-      from: "user", 
-      text: `Planning a trip from ${formData.from} to ${formData.to}...` 
+    // Add user message to chat
+    const sid = getSessionId();
+    const userMessage = {
+      from: "user",
+      text: `Planning a trip from ${formData.from} to ${formData.to}...`,
     };
     setChat((prev) => [...prev, userMessage]);
 
     setTripPlan({
-      transport: '',
-      accommodation: '',
-      plan: '',
-      isGenerating: true
+      transport: "",
+      accommodation: "",
+      plan: "",
+      isGenerating: true,
     });
 
     try {
@@ -87,7 +90,7 @@ function Chat() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user_id: 0,
+          session_id: sid,
           message: tripQuery,
         }),
       });
@@ -104,27 +107,28 @@ function Chat() {
         if (done) break;
 
         const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
+        const lines = chunk.split("\n");
 
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
+          if (line.startsWith("data: ")) {
             const data = line.slice(6);
-            
-            if (data === '[DONE]') {
-              setTripPlan(prev => ({ ...prev, isGenerating: false }));
+
+            if (data === "[DONE]") {
+              setTripPlan((prev) => ({ ...prev, isGenerating: false }));
               continue;
             }
 
             try {
               const parsed = JSON.parse(data);
               const { stage, result } = parsed;
-              
+              console.log(result);
+
+              // Extract the actual output text from the agent response object
               const extractOutput = (agentResult) => {
-                if (typeof agentResult === 'string') {
+                if (typeof agentResult === "string") {
                   return agentResult;
                 }
-                if (agentResult && typeof agentResult === 'object') {
-                 
+                if (agentResult && typeof agentResult === "object") {
                   if (agentResult.output) {
                     return agentResult.output;
                   }
@@ -132,25 +136,25 @@ function Chat() {
                 }
                 return String(agentResult);
               };
-              
+
               const outputText = extractOutput(result);
-              
-              if (stage === 'transport') {
-                setTripPlan(prev => ({ ...prev, transport: outputText }));
-              } else if (stage === 'accommodation') {
-                setTripPlan(prev => ({ ...prev, accommodation: outputText }));
-              } else if (stage === 'plan') {
-                setTripPlan(prev => ({ ...prev, plan: outputText }));
+
+              if (stage === "transport") {
+                setTripPlan((prev) => ({ ...prev, transport: outputText }));
+              } else if (stage === "accommodation") {
+                setTripPlan((prev) => ({ ...prev, accommodation: outputText }));
+              } else if (stage === "plan") {
+                setTripPlan((prev) => ({ ...prev, plan: outputText }));
               }
             } catch (e) {
-              console.error('Error parsing SSE data:', e);
+              console.error("Error parsing SSE data:", e);
             }
           }
         }
       }
     } catch (error) {
       console.error("Error generating trip:", error);
-      setTripPlan(prev => ({ ...prev, isGenerating: false }));
+      setTripPlan((prev) => ({ ...prev, isGenerating: false }));
       setChat((prev) => [
         ...prev,
         { from: "bot", text: "Error generating trip: " + error.message },
@@ -173,14 +177,20 @@ function Chat() {
       </h2>
       <div className="chatbot-underline"></div>
       <div className="chat-window">
-        {chat.length === 0 && <div className="chat-placeholder">No messages</div>}
+        {chat.length === 0 && (
+          <div className="chat-placeholder">No messages</div>
+        )}
         {chat.map((msg, idx) => (
           <div key={idx} className={`chat-message ${msg.from}`}>
             {msg.text}
           </div>
         ))}
-        
-        <TripPlanContainer tripPlan={tripPlan} />
+
+        {/* Trip Plan Container - shows streaming trip plan */}
+        <TripPlanContainer
+          tripPlan={tripPlan}
+          onSelectAttractions={onSelectAttractions}
+        />
       </div>
       <form className="chat-input-row" onSubmit={handleSend}>
         <input
@@ -190,7 +200,9 @@ function Chat() {
           onChange={(e) => setMessage(e.target.value)}
           className="chat-input"
         />
-        <button type="submit" className="chat-send-btn">Send</button>
+        <button type="submit" className="chat-send-btn">
+          Send
+        </button>
         <button
           type="button"
           className="chat-send-btn open-form-btn"
@@ -200,8 +212,12 @@ function Chat() {
         </button>
       </form>
 
-      <div className={`trip-form-wrapper ${formOpen ? 'open' : ''}`}>
-        <TripForm onSubmit={handleFormSubmit} />
+      <div className={`trip-form-wrapper ${formOpen ? "open" : ""}`}>
+        <TripForm
+          onSubmit={handleFormSubmit}
+          onClose={() => setFormOpen(false)}
+        />{" "}
+        {/* Pass onClose */}
       </div>
     </div>
   );
