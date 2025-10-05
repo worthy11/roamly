@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BsRobot } from "react-icons/bs";
 import "./Chat.css";
 import { API_BASE } from "../config";
@@ -7,23 +7,25 @@ import TripPlanContainer from "./TripPlanContainer";
 import { getSessionId } from "../session";
 import { MarkdownRenderer } from "../utils/markdownUtils";
 
-function Chat({ onSelectAttractions }) {
+function Chat({ onSelectAttractions, initialMessage, onMessageSent }) {
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
   const [formOpen, setFormOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [tripPlan, setTripPlan] = useState({
-    transport: '',
-    accommodation: '',
-    plan: '',
-    tips: '',
-    risks: '',
-    isGenerating: false
+    transport: "",
+    accommodation: "",
+    plan: "",
+    tips: "",
+    risks: "",
+    isGenerating: false,
   });
 
   const sendMessage = async (text) => {
     const sid = getSessionId();
-    const userMessage = { from: "user", text };
+    const userMessage = { from: "user", text, timestamp: Date.now() };
     setChat((prev) => [...prev, userMessage]);
+    setIsLoading(true);
 
     try {
       const response = await fetch(`${API_BASE}/chat/text`, {
@@ -42,18 +44,20 @@ function Chat({ onSelectAttractions }) {
       }
 
       const data = await response.json();
-      const botMessage = { from: "bot", text: data.response };
+      const botMessage = {
+        from: "bot",
+        text: data.response,
+        timestamp: Date.now(),
+      };
       setChat((prev) => [...prev, botMessage]);
-
-      if (data.trip_plan) {
-        console.log(data.trip_plan);
-      }
     } catch (error) {
       console.error("Error fetching response:", error);
       setChat((prev) => [
         ...prev,
         { from: "bot", text: "Error: " + error.message },
       ]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -76,16 +80,18 @@ function Chat({ onSelectAttractions }) {
     const userMessage = {
       from: "user",
       text: `Planning a trip from ${formData.from} to ${formData.to}...`,
+      timestamp: Date.now(),
     };
     setChat((prev) => [...prev, userMessage]);
 
     setTripPlan({
-      transport: '',
-      accommodation: '',
-      plan: '',
-      tips: '',
-      risks: '',
-      isGenerating: true
+      transport: "",
+      accommodation: "",
+      plan: "",
+      tips: "",
+      risks: "",
+      isGenerating: true,
+      timestamp: Date.now(),
     });
 
     try {
@@ -119,7 +125,11 @@ function Chat({ onSelectAttractions }) {
             const data = line.slice(6);
 
             if (data === "[DONE]") {
-              setTripPlan((prev) => ({ ...prev, isGenerating: false }));
+              setTripPlan((prev) => ({
+                ...prev,
+                isGenerating: false,
+                timestamp: Date.now(),
+              }));
               continue;
             }
 
@@ -143,17 +153,17 @@ function Chat({ onSelectAttractions }) {
               };
 
               const outputText = extractOutput(result);
-              
-              if (stage === 'transport') {
-                setTripPlan(prev => ({ ...prev, transport: outputText }));
-              } else if (stage === 'accommodation') {
-                setTripPlan(prev => ({ ...prev, accommodation: outputText }));
-              } else if (stage === 'plan') {
-                setTripPlan(prev => ({ ...prev, plan: outputText }));
-              } else if (stage === 'tips') {
-                setTripPlan(prev => ({ ...prev, tips: outputText }));
-              } else if (stage === 'risks') {
-                setTripPlan(prev => ({ ...prev, risks: outputText }));
+
+              if (stage === "transport") {
+                setTripPlan((prev) => ({ ...prev, transport: outputText }));
+              } else if (stage === "accommodation") {
+                setTripPlan((prev) => ({ ...prev, accommodation: outputText }));
+              } else if (stage === "plan") {
+                setTripPlan((prev) => ({ ...prev, plan: outputText }));
+              } else if (stage === "tips") {
+                setTripPlan((prev) => ({ ...prev, tips: outputText }));
+              } else if (stage === "risks") {
+                setTripPlan((prev) => ({ ...prev, risks: outputText }));
               }
             } catch (e) {
               console.error("Error parsing SSE data:", e);
@@ -170,6 +180,16 @@ function Chat({ onSelectAttractions }) {
       ]);
     }
   };
+
+  // Handle initial message from map "Learn more" button
+  useEffect(() => {
+    if (initialMessage) {
+      sendMessage(initialMessage);
+      if (onMessageSent) {
+        onMessageSent();
+      }
+    }
+  }, [initialMessage]);
 
   const handleSend = (e) => {
     e.preventDefault();
@@ -189,21 +209,63 @@ function Chat({ onSelectAttractions }) {
         {chat.length === 0 && (
           <div className="chat-placeholder">No messages</div>
         )}
-        {chat.map((msg, idx) => (
-          <div key={idx} className={`chat-message ${msg.from}`}>
-            {msg.from === 'bot' ? (
-              <MarkdownRenderer content={msg.text} />
-            ) : (
-              msg.text
-            )}
+
+        {/* Messages before trip plan generation */}
+        {chat
+          .filter(
+            (msg) => !tripPlan.timestamp || msg.timestamp <= tripPlan.timestamp
+          )
+          .map((msg, idx) => (
+            <div key={idx} className={`chat-message ${msg.from}`}>
+              {msg.from === "bot" ? (
+                <MarkdownRenderer content={msg.text} />
+              ) : (
+                msg.text
+              )}
+            </div>
+          ))}
+
+        {/* Loading indicator for regular chat */}
+        {isLoading && !tripPlan.timestamp && (
+          <div className="chat-message bot loading-message">
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <span className="loading-text">AI is thinking...</span>
+            </div>
           </div>
-        ))}
+        )}
 
         {/* Trip Plan Container - shows streaming trip plan */}
-        <TripPlanContainer
-          tripPlan={tripPlan}
-          onSelectAttractions={onSelectAttractions}
-        />
+        {tripPlan.timestamp && (
+          <TripPlanContainer
+            tripPlan={tripPlan}
+            onSelectAttractions={onSelectAttractions}
+          />
+        )}
+
+        {/* Messages after trip plan generation */}
+        {tripPlan.timestamp &&
+          chat
+            .filter((msg) => msg.timestamp > tripPlan.timestamp)
+            .map((msg, idx) => (
+              <div key={`after-${idx}`} className={`chat-message ${msg.from}`}>
+                {msg.from === "bot" ? (
+                  <MarkdownRenderer content={msg.text} />
+                ) : (
+                  msg.text
+                )}
+              </div>
+            ))}
+
+        {/* Loading indicator for messages after trip plan */}
+        {isLoading && tripPlan.timestamp && (
+          <div className="chat-message bot loading-message">
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <span className="loading-text">AI is thinking...</span>
+            </div>
+          </div>
+        )}
       </div>
       <form className="chat-input-row" onSubmit={handleSend}>
         <input

@@ -14,10 +14,23 @@ function App() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedAttractions, setSelectedAttractions] = useState([]);
+  const [selectedCoordinates, setSelectedCoordinates] = useState(null);
+  const [chatMessage, setChatMessage] = useState(null);
 
   const handleAttractionSelect = (attractions) => {
     setSelectedAttractions(attractions);
-    console.log("Set in App");
+  };
+
+  const handleMapClick = (coordinates) => {
+    setSelectedCoordinates(coordinates);
+  };
+
+  const handleLearnMore = (trip) => {
+    const message = `Tell me more about "${trip.title}" and recommend similar trips.`;
+
+    // Set the message to be sent to chat and open the chat
+    setChatMessage(message);
+    setIsChatOpen(true);
   };
 
   useEffect(() => {
@@ -49,6 +62,8 @@ function App() {
         selectedTrip={selectedTrip}
         setSelectedTrip={setSelectedTrip}
         selectedAttractions={selectedAttractions}
+        onMapClick={handleMapClick}
+        onLearnMore={handleLearnMore}
       />
 
       {!isChatOpen && (
@@ -69,14 +84,21 @@ function App() {
         >
           X
         </button>
-        <Chat onSelectAttractions={handleAttractionSelect} />
+        <Chat
+          onSelectAttractions={handleAttractionSelect}
+          initialMessage={chatMessage}
+          onMessageSent={() => setChatMessage(null)}
+        />
       </div>
 
       <div className={`slide-down-form ${isFormOpen ? "open" : ""}`}>
         <button className="close-form-btn" onClick={() => setIsFormOpen(false)}>
           ×
         </button>
-        <Travel />
+        <Travel
+          selectedCoordinates={selectedCoordinates}
+          onCoordinatesUsed={() => setSelectedCoordinates(null)}
+        />
       </div>
     </Layout>
   );

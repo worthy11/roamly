@@ -5,7 +5,6 @@ import "./index.css";
 import App from "./App.jsx";
 import Travel from "./pages/Travels.jsx";
 import ErrorPage from "./pages/ErrorPage.jsx";
-import Login from "./Login.jsx";
 
 const router = createBrowserRouter([
   { path: "/", element: <App /> },

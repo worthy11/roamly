@@ -5,10 +5,9 @@ from passlib.context import CryptContext
 from typing import List
 import os
 
-from app.routers import users, trips, chat
+from app.routers import trips, chat
 
 app = FastAPI()
-app.include_router(users.router)
 app.include_router(trips.router)
 app.include_router(chat.router)
 

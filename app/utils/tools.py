@@ -28,8 +28,8 @@ def search_trips(query: str, top_k: int = 3) -> str:
         
         response = f"Found {len(results)} matching trips:\n\n"
         for i, (trip, score) in enumerate(results, 1):
-            cities = [tc.city.name for tc in trip.cities]
-            response += f"{i}. {trip.country} (Match: {score:.0%})\n"
+            cities = trip.cities
+            response += f"{i}. {trip.title} (Match: {score:.0%})\n"
             response += f"   {trip.description}\n"
             response += f"   Duration: {trip.duration} days | Activity: {trip.activity_level} | Budget: ${trip.budget}\n"
             response += f"   Cities: {', '.join(cities)}\n\n"

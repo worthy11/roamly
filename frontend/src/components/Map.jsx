@@ -8,7 +8,14 @@ import {
 import { useRef, useEffect } from "react";
 import "./Map.css";
 
-function Map({ trips, selectedTrip, setSelectedTrip, selectedAttractions }) {
+function Map({
+  trips,
+  selectedTrip,
+  setSelectedTrip,
+  selectedAttractions,
+  onMapClick,
+  onLearnMore,
+}) {
   const mapRef = useRef(null);
   const center = {
     lat: 20,
@@ -17,6 +24,14 @@ function Map({ trips, selectedTrip, setSelectedTrip, selectedAttractions }) {
 
   const onLoad = (map) => {
     mapRef.current = map;
+  };
+
+  const handleMapClick = (event) => {
+    if (onMapClick) {
+      const lat = event.latLng.lat();
+      const lng = event.latLng.lng();
+      onMapClick({ lat, lng });
+    }
   };
 
   useEffect(() => {
@@ -44,25 +59,24 @@ function Map({ trips, selectedTrip, setSelectedTrip, selectedAttractions }) {
           zoom={2}
           mapTypeId="roadmap"
           onLoad={onLoad}
+          onClick={handleMapClick}
           options={{
             streetViewControl: false,
             mapTypeControl: false,
           }}
         >
-          {trips.map((trip) =>
-            trip.cities.map((city) => (
-              <MarkerF
-                key={`${trip.trip_id}-${city.name}`}
-                position={{ lat: city.lat, lng: city.lon }}
-                title={`${trip.country} - ${city.name}`}
-                icon={{
-                  url: "http://maps.google.com/mapfiles/kml/pal4/icon49.png",
-                  scaledSize: new window.google.maps.Size(40, 40),
-                }}
-                onClick={() => setSelectedTrip({ trip, city })}
-              />
-            ))
-          )}
+          {trips.map((trip) => (
+            <MarkerF
+              key={`${trip.trip_id}`}
+              position={{ lat: trip.lat, lng: trip.lng }}
+              title={`${trip.title}`}
+              icon={{
+                url: "http://maps.google.com/mapfiles/kml/pal4/icon49.png",
+                scaledSize: new window.google.maps.Size(40, 40),
+              }}
+              onClick={() => setSelectedTrip(trip)}
+            />
+          ))}
 
           {selectedAttractions?.map((a, idx) => (
             <MarkerF
@@ -103,42 +117,71 @@ function Map({ trips, selectedTrip, setSelectedTrip, selectedAttractions }) {
           )}
 
           {selectedTrip && (
-  <InfoBox
-    position={{
-      lat: selectedTrip.city.lat,
-      lng: selectedTrip.city.lon,
-    }}
-    options={{ closeBoxURL: '', enableEventPropagation: true }}
-  >
-    <div className="info-window">
-      {/* Twój przycisk zamknięcia */}
-      <button
-        style={{
-          position: 'absolute',
-          top: '4px',
-          right: '4px',
-          background: 'transparent',
-          border: 'none',
-          color: '#fff',
-          fontSize: '16px',
-          cursor: 'pointer',
-        }}
-        onClick={() => setSelectedTrip(null)}
-      >
-        ×
-      </button>
+            <InfoBox
+              position={{
+                lat: selectedTrip.lat,
+                lng: selectedTrip.lng,
+              }}
+              options={{ closeBoxURL: "", enableEventPropagation: true }}
+            >
+              <div className="info-window">
+                {/* Close button */}
+                <button
+                  style={{
+                    position: "absolute",
+                    top: "4px",
+                    right: "4px",
+                    background: "transparent",
+                    border: "none",
+                    color: "#fff",
+                    fontSize: "16px",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => setSelectedTrip(null)}
+                >
+                  ×
+                </button>
 
-      <h3>
-        {selectedTrip.city.name}, {selectedTrip.trip.country}
-      </h3>
-      {selectedTrip.trip.description && <p>{selectedTrip.trip.description}</p>}
-      {selectedTrip.trip.duration && <p>Duration: {selectedTrip.trip.duration} days</p>}
-      {selectedTrip.trip.budget && <p>Budget: ${selectedTrip.trip.budget}</p>}
-      {selectedTrip.trip.num_people && <p>People: {selectedTrip.trip.num_people}</p>}
-      {selectedTrip.trip.activity_level && <p>Activity: {selectedTrip.trip.activity_level}</p>}
-    </div>
-  </InfoBox>
-)}
+                <h3>{selectedTrip.title}</h3>
+                {selectedTrip.cities && (
+                  <p>
+                    <strong>Cities:</strong> {selectedTrip.cities}
+                  </p>
+                )}
+                {selectedTrip.description && <p>{selectedTrip.description}</p>}
+                {selectedTrip.duration && (
+                  <p>Duration: {selectedTrip.duration} days</p>
+                )}
+                {selectedTrip.budget && <p>Budget: ${selectedTrip.budget}</p>}
+                {selectedTrip.num_people && (
+                  <p>People: {selectedTrip.num_people}</p>
+                )}
+                {selectedTrip.activity_level && (
+                  <p>Activity: {selectedTrip.activity_level}</p>
+                )}
+                <button
+                  style={{
+                    background: "#e6b474",
+                    color: "#2d4238",
+                    border: "none",
+                    borderRadius: "15px",
+                    padding: "8px 16px",
+                    marginTop: "10px",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                  }}
+                  onClick={() => {
+                    if (onLearnMore) {
+                      onLearnMore(selectedTrip);
+                    }
+                  }}
+                >
+                  Learn more
+                </button>
+              </div>
+            </InfoBox>
+          )}
         </GoogleMap>
       </LoadScript>
     </div>

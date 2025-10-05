@@ -13,7 +13,7 @@
 .tripFormFields {
   display: flex;
   flex-direction: column;
-  gap: 15px; 
+  gap: 10px; 
   width: 400px;
   margin: 0 auto;
   

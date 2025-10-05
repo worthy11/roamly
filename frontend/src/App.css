@@ -78,6 +78,25 @@
   font-size: 0.9rem;
 }
 
+.trip-plan-loading-bottom {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  margin-top: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  border: 1px solid #e6b474;
+}
+
+.trip-plan-download-bottom {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
 .loading-spinner {
   width: 16px;
   height: 16px;
@@ -356,7 +375,7 @@
 .slide-down-form {
   position: fixed;
   top: -100%;
-  left: 50%;
+  left: 20%;
   transform: translateX(-50%);
   width: 80%;
   max-width: 400px;
