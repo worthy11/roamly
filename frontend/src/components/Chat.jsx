@@ -11,10 +11,12 @@ function Chat({ onSelectAttractions }) {
   const [chat, setChat] = useState([]);
   const [formOpen, setFormOpen] = useState(false);
   const [tripPlan, setTripPlan] = useState({
-    transport: "",
-    accommodation: "",
-    plan: "",
-    isGenerating: false,
+    transport: '',
+    accommodation: '',
+    plan: '',
+    tips: '',
+    risks: '',
+    isGenerating: false
   });
 
   const sendMessage = async (text) => {
@@ -77,10 +79,12 @@ function Chat({ onSelectAttractions }) {
     setChat((prev) => [...prev, userMessage]);
 
     setTripPlan({
-      transport: "",
-      accommodation: "",
-      plan: "",
-      isGenerating: true,
+      transport: '',
+      accommodation: '',
+      plan: '',
+      tips: '',
+      risks: '',
+      isGenerating: true
     });
 
     try {
@@ -138,13 +142,17 @@ function Chat({ onSelectAttractions }) {
               };
 
               const outputText = extractOutput(result);
-
-              if (stage === "transport") {
-                setTripPlan((prev) => ({ ...prev, transport: outputText }));
-              } else if (stage === "accommodation") {
-                setTripPlan((prev) => ({ ...prev, accommodation: outputText }));
-              } else if (stage === "plan") {
-                setTripPlan((prev) => ({ ...prev, plan: outputText }));
+              
+              if (stage === 'transport') {
+                setTripPlan(prev => ({ ...prev, transport: outputText }));
+              } else if (stage === 'accommodation') {
+                setTripPlan(prev => ({ ...prev, accommodation: outputText }));
+              } else if (stage === 'plan') {
+                setTripPlan(prev => ({ ...prev, plan: outputText }));
+              } else if (stage === 'tips') {
+                setTripPlan(prev => ({ ...prev, tips: outputText }));
+              } else if (stage === 'risks') {
+                setTripPlan(prev => ({ ...prev, risks: outputText }));
               }
             } catch (e) {
               console.error("Error parsing SSE data:", e);

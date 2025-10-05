@@ -4,15 +4,15 @@ import { pdf } from '@react-pdf/renderer';
 import React from 'react';
 
 const TripPlanContainer = ({ tripPlan, onSelectAttractions }) => {
-  const { transport, accommodation, plan, isGenerating } = tripPlan;
+  const { transport, accommodation, plan, tips, risks, isGenerating } = tripPlan;
 
   // Don't render if no content and not generating
-  if (!isGenerating && !transport && !accommodation && !plan) {
+  if (!isGenerating && !transport && !accommodation && !plan && !tips && !risks) {
     return null;
   }
 
   // Check if all trip plan boxes are rendered (not generating and all content exists)
-  const allBoxesRendered = !isGenerating && transport && accommodation && plan;
+  const allBoxesRendered = !isGenerating && transport && accommodation && plan && tips && risks;
 
   const handleDownloadPDF = async () => {
     try {
@@ -93,6 +93,20 @@ const TripPlanContainer = ({ tripPlan, onSelectAttractions }) => {
           content={plan}
           icon="🗓️"
           onSelectAttractions={onSelectAttractions}
+        />
+
+        <TripPlanBox
+          type="tips"
+          title="Travel Tips"
+          content={tips}
+          icon="💡"
+        />
+        
+        <TripPlanBox
+          type="risks"
+          title="Safety & Risks"
+          content={risks}
+          icon="⚠️"
         />
       </div>
     </div>

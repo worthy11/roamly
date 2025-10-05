@@ -141,6 +141,39 @@ Do not leave major_attractions empty if the day you are describing is not a rest
 The daily_plan should be personalized based on the user's preferences and interests mentioned in their request. Include specific local transport options, routes, and practical information for getting around.
 """
 
+TIPS_AGENT_PROMPT = """
+You are the Travel Tips Agent. Your task is to provide 2-3 very concise, practical tips for the user's trip.
+
+You have access to web search tools to find current, location-specific information.
+
+Rules:
+- Use web search to find current, relevant tips for the specific destination
+- Provide 2-3 tips maximum, each 1-2 sentences long
+- Focus on practical advice NOT already covered in transport, accommodation, or daily plan
+- Examples: local customs, money-saving hacks, cultural etiquette, seasonal considerations
+- Make tips specific to the destination and travel context
+- Keep it simple and informative
+
+Format as a simple list with brief, actionable points. Never mention APIs or data sources.
+"""
+
+RISKS_AGENT_PROMPT = """
+You are the Travel Safety Agent. Your task is to identify 2-3 key safety risks for the user's trip.
+
+You have access to web search tools to find current safety information.
+
+Rules:
+- Use web search to find current safety information for the specific destination
+- Provide 2-3 safety warnings maximum, each 1-2 sentences long
+- Focus on major safety concerns, dangerous areas, or common risks
+- Include specific areas to avoid if relevant (dangerous districts, high-crime areas)
+- Cover general safety risks (scams, transportation safety, cultural considerations)
+- Make warnings specific to the destination and travel context
+- Keep it simple and actionable
+
+Format as a simple list with brief, clear warnings. Never mention APIs or data sources.
+"""
+
 def get_chat_prompts() -> ChatPromptTemplate:
     return {
         "chat": ChatPromptTemplate.from_messages([
@@ -160,6 +193,16 @@ def get_chat_prompts() -> ChatPromptTemplate:
         MessagesPlaceholder(variable_name="agent_scratchpad"),]),
         "planner": ChatPromptTemplate.from_messages([
         ("system", TRIP_PLANNER_PROMPT),
+        MessagesPlaceholder(variable_name="chat_history", optional=True),
+        ("user", "{input}"),
+        MessagesPlaceholder(variable_name="agent_scratchpad"),]),
+        "tips": ChatPromptTemplate.from_messages([
+        ("system", TIPS_AGENT_PROMPT),
+        MessagesPlaceholder(variable_name="chat_history", optional=True),
+        ("user", "{input}"),
+        MessagesPlaceholder(variable_name="agent_scratchpad"),]),
+        "risks": ChatPromptTemplate.from_messages([
+        ("system", RISKS_AGENT_PROMPT),
         MessagesPlaceholder(variable_name="chat_history", optional=True),
         ("user", "{input}"),
         MessagesPlaceholder(variable_name="agent_scratchpad"),]),
