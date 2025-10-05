@@ -39,7 +39,7 @@ async def chat(request: ChatRequest):
             plan_output = plan_result.get("output", str(plan_result))
             try:
                 trip_plan = json.loads(plan_output)
-                json_str = json.dumps(trip_plan)  # serialize again to ensure valid JSON
+                json_str = json.dumps(trip_plan)
                 yield f"data: {json.dumps({'stage': 'plan', 'result': plan_output})}\n\n"
                 break
             except json.JSONDecodeError as e:

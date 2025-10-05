@@ -14,12 +14,11 @@ function Travel({ selectedCoordinates, onCoordinatesUsed }) {
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
 
-  // Update coordinates when selectedCoordinates changes
   useEffect(() => {
     if (selectedCoordinates) {
       setLat(selectedCoordinates.lat.toFixed(6));
       setLng(selectedCoordinates.lng.toFixed(6));
-      // Call the callback to clear the coordinates after using them
+
       if (onCoordinatesUsed) {
         onCoordinatesUsed();
       }
@@ -36,7 +35,7 @@ function Travel({ selectedCoordinates, onCoordinatesUsed }) {
       num_people: parseInt(numPeople),
       activity_level: activityLevel,
       budget: parseFloat(budget),
-      cities: cities, // Keep as comma-separated string
+      cities: cities,
       lat: lat ? parseFloat(lat) : null,
       lng: lng ? parseFloat(lng) : null,
     };

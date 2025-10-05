@@ -2,7 +2,7 @@ import { useState } from "react";
 import { FaSuitcase } from "react-icons/fa";
 import "./TripForm.css";
 
-function TripForm({ onSubmit, onClose }) { // Add onClose prop
+function TripForm({ onSubmit, onClose }) {
   const [formData, setFormData] = useState({
     from: "",
     to: "",
@@ -28,11 +28,13 @@ function TripForm({ onSubmit, onClose }) { // Add onClose prop
 
   return (
     <div className="trip-form">
-      <button className="close-form-btn-two" onClick={onClose}>×</button> {/* Close button */}
+      <button className="close-form-btn-two" onClick={onClose}>
+        ×
+      </button>{" "}
+      {/* Close button */}
       <h3 className="trip-form-title">
         Travel sheet <FaSuitcase size={28} title="Trip Form" />
       </h3>
-
       <form onSubmit={handleFormSubmit} className="trip-form-fields">
         <input
           type="text"

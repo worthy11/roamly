@@ -5,7 +5,7 @@ import {
   InfoBox,
   PolylineF,
 } from "@react-google-maps/api";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import "./Map.css";
 
 function Map({
@@ -15,15 +15,31 @@ function Map({
   selectedAttractions,
   onMapClick,
   onLearnMore,
+  isChatOpen,
 }) {
   const mapRef = useRef(null);
-  const center = {
-    lat: 20,
-    lng: 0,
-  };
+  const [lastSelectedTrip, setLastSelectedTrip] = useState(null);
+  const [isMapReady, setIsMapReady] = useState(false);
+
+  const center = lastSelectedTrip
+    ? { lat: lastSelectedTrip.lat, lng: lastSelectedTrip.lng }
+    : { lat: 20, lng: 0 };
 
   const onLoad = (map) => {
     mapRef.current = map;
+    setIsMapReady(true);
+
+    const handleResize = () => {
+      if (mapRef.current) {
+        setTimeout(() => {
+          window.google.maps.event.trigger(mapRef.current, "resize");
+        }, 50);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    map._resizeHandler = handleResize;
   };
 
   const handleMapClick = (event) => {
@@ -35,6 +51,12 @@ function Map({
   };
 
   useEffect(() => {
+    if (selectedTrip) {
+      setLastSelectedTrip(selectedTrip);
+    }
+  }, [selectedTrip]);
+
+  useEffect(() => {
     if (!mapRef.current || !selectedAttractions?.length) return;
 
     const bounds = new window.google.maps.LatLngBounds();
@@ -44,11 +66,82 @@ function Map({
     mapRef.current.fitBounds(bounds);
   }, [selectedAttractions]);
 
+  useEffect(() => {
+    if (!isChatOpen && mapRef.current && selectedAttractions?.length > 0) {
+      setTimeout(() => {
+        if (window.google && window.google.maps && mapRef.current) {
+          window.google.maps.event.trigger(mapRef.current, "resize");
+
+          const bounds = new window.google.maps.LatLngBounds();
+          selectedAttractions.forEach(({ lat, lon }) =>
+            bounds.extend({ lat, lng: lon })
+          );
+          mapRef.current.fitBounds(bounds);
+        }
+      }, 150);
+    } else if (
+      !isChatOpen &&
+      mapRef.current &&
+      lastSelectedTrip &&
+      !selectedAttractions?.length
+    ) {
+      setTimeout(() => {
+        if (window.google && window.google.maps && mapRef.current) {
+          window.google.maps.event.trigger(mapRef.current, "resize");
+
+          mapRef.current.setCenter({
+            lat: lastSelectedTrip.lat,
+            lng: lastSelectedTrip.lng,
+          });
+          mapRef.current.setZoom(8);
+        }
+      }, 150);
+    }
+  }, [isChatOpen, selectedAttractions, lastSelectedTrip]);
+
+  useEffect(() => {
+    return () => {
+      if (mapRef.current && mapRef.current._resizeHandler) {
+        window.removeEventListener("resize", mapRef.current._resizeHandler);
+      }
+    };
+  }, []);
+
   const path =
     selectedAttractions?.map(({ lat, lon }) => ({ lat, lng: lon })) || [];
 
+  const createSize = (width, height) => {
+    if (
+      isMapReady &&
+      window.google &&
+      window.google.maps &&
+      window.google.maps.Size
+    ) {
+      return new window.google.maps.Size(width, height);
+    }
+    return null;
+  };
+
   return (
     <div className="map-wrapper">
+      {!isMapReady && (
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            background: "rgba(255, 255, 255, 0.9)",
+            padding: "20px",
+            borderRadius: "10px",
+            zIndex: 1000,
+            fontSize: "16px",
+            color: "#2d4238",
+          }}
+        >
+          Loading map...
+        </div>
+      )}
       <LoadScript
         googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
         language="en"
@@ -72,7 +165,7 @@ function Map({
               title={`${trip.title}`}
               icon={{
                 url: "http://maps.google.com/mapfiles/kml/pal4/icon49.png",
-                scaledSize: new window.google.maps.Size(40, 40),
+                scaledSize: createSize(40, 40),
               }}
               onClick={() => setSelectedTrip(trip)}
             />
@@ -92,7 +185,7 @@ function Map({
                   }</text>
                 </svg>
               `)}`,
-                scaledSize: new window.google.maps.Size(50, 50),
+                scaledSize: createSize(50, 50),
               }}
             />
           ))}
@@ -125,7 +218,6 @@ function Map({
               options={{ closeBoxURL: "", enableEventPropagation: true }}
             >
               <div className="info-window">
-                {/* Close button */}
                 <button
                   style={{
                     position: "absolute",

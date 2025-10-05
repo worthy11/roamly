@@ -14,9 +14,9 @@ class Trip(Base):
     num_people = Column(Integer)
     activity_level = Column(String)
     budget = Column(Float)
-    cities = Column(String)  # Comma-separated cities as string
-    lat = Column(Float)  # Latitude coordinate
-    lng = Column(Float)  # Longitude coordinate
+    cities = Column(String)
+    lat = Column(Float)
+    lng = Column(Float)
     embedding = Column(Text)
 
 class TripCreate(BaseModel):
@@ -26,7 +26,7 @@ class TripCreate(BaseModel):
     num_people: Optional[int] = None
     activity_level: Optional[str] = None
     budget: Optional[float] = None
-    cities: str  # Comma-separated cities as string
+    cities: str
     lat: Optional[float] = None
     lng: Optional[float] = None
 
@@ -38,7 +38,7 @@ class TripRead(BaseModel):
     num_people: Optional[int]
     activity_level: Optional[str]
     budget: Optional[float]
-    cities: str  # Comma-separated cities as string
+    cities: str
     lat: Optional[float]
     lng: Optional[float]
 
@@ -86,6 +86,3 @@ class TripRequest(BaseModel):
     pop_density: Optional[str] = "medium"
     budget: Optional[float] = 1000
     keypoints: Optional[List[str]] = []
-
-from langchain.output_parsers import PydanticOutputParser
-trip_plan_parser = PydanticOutputParser(pydantic_object=TripPlan)

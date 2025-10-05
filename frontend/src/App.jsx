@@ -49,8 +49,15 @@ function App() {
 
   const handleChatClose = () => {
     setIsChatOpen(false);
-
     setIsFormOpen(false);
+
+    // Trigger map refresh after a short delay to ensure layout is updated
+    setTimeout(() => {
+      if (window.google && window.google.maps) {
+        // Force a map refresh by triggering a resize event
+        window.dispatchEvent(new Event("resize"));
+      }
+    }, 100);
   };
 
   return (
@@ -64,6 +71,7 @@ function App() {
         selectedAttractions={selectedAttractions}
         onMapClick={handleMapClick}
         onLearnMore={handleLearnMore}
+        isChatOpen={isChatOpen}
       />
 
       {!isChatOpen && (
@@ -78,10 +86,7 @@ function App() {
       )}
 
       <div className={`chat-form-wrapper ${isChatOpen ? "open" : ""}`}>
-        <button
-          className="close-chatbot-btn"
-          onClick={() => setIsChatOpen(false)}
-        >
+        <button className="close-chatbot-btn" onClick={handleChatClose}>
           X
         </button>
         <Chat
