@@ -1,6 +1,10 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 
+// Use default fonts with proper UTF-8 support
+// The default Helvetica font in @react-pdf/renderer supports UTF-8 characters
+// No need to register external fonts to avoid loading issues
+
 // Define styles that match the website UI
 const styles = StyleSheet.create({
   page: {
@@ -26,11 +30,11 @@ const styles = StyleSheet.create({
   content: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
   },
   box: {
     width: '48%',
-    marginBottom: 10,
+    marginBottom: 8,
     backgroundColor: '#f8f9fa',
     borderRadius: 6,
     borderWidth: 1,
@@ -233,8 +237,12 @@ const parseContentForPDF = (content) => {
 const parseInlineFormatting = (text) => {
   if (!text) return text;
   
-  // Split text by bold markers
-  const parts = text.split(/(\*\*.*?\*\*)/);
+  // Ensure text is properly encoded for Polish characters
+  // NFC normalization ensures consistent character representation
+  const normalizedText = text.normalize('NFC');
+  
+  // Split text by bold markers while preserving UTF-8 characters
+  const parts = normalizedText.split(/(\*\*.*?\*\*)/);
   
   return parts.map((part, index) => {
     if (part.startsWith('**') && part.endsWith('**')) {
@@ -259,6 +267,28 @@ const parseInlineFormatting = (text) => {
 const TripPlanPDF = ({ tripPlan }) => {
   const { transport, accommodation, plan } = tripPlan;
   
+  const renderText = (text) => {
+    const formattedParts = parseInlineFormatting(text);
+    
+    return formattedParts.map((part, index) => {
+      if (part.type === 'strong') {
+        return (
+          <Text key={index} style={styles.strong}>
+            {part.text}
+          </Text>
+        );
+      } else if (part.type === 'em') {
+        return (
+          <Text key={index} style={styles.em}>
+            {part.text}
+          </Text>
+        );
+      } else {
+        return part.text;
+      }
+    });
+  };
+
   const renderContent = (content, type) => {
     const elements = parseContentForPDF(content);
     
@@ -267,32 +297,36 @@ const TripPlanPDF = ({ tripPlan }) => {
         case 'h3':
           return (
             <Text key={index} style={styles.h3}>
-              {element.text}
+              {renderText(element.text)}
             </Text>
           );
         case 'h4':
           return (
             <Text key={index} style={styles.h4}>
-              {element.text}
+              {renderText(element.text)}
             </Text>
           );
         case 'h5':
           return (
             <Text key={index} style={styles.h5}>
-              {element.text}
+              {renderText(element.text)}
             </Text>
           );
-        case 'listItem':
+        case 'list':
           return (
-            <Text key={index} style={styles.listItem}>
-              • {element.text}
-            </Text>
+            <View key={index} style={styles.list}>
+              {element.items.map((item, itemIndex) => (
+                <Text key={itemIndex} style={styles.listItem}>
+                  • {renderText(item)}
+                </Text>
+              ))}
+            </View>
           );
         case 'paragraph':
         default:
           return (
             <Text key={index} style={styles.paragraph}>
-              {element.text}
+              {renderText(element.text)}
             </Text>
           );
       }
@@ -310,7 +344,7 @@ const TripPlanPDF = ({ tripPlan }) => {
           {transport && (
             <View style={[styles.box, styles.transportBox]}>
               <View style={styles.boxHeader}>
-                <Text style={styles.boxTitle}>🚗 Transportation</Text>
+                <Text style={styles.boxTitle}>Transportation</Text>
               </View>
               <View style={styles.boxContent}>
                 {renderContent(transport, 'transport')}
@@ -321,7 +355,7 @@ const TripPlanPDF = ({ tripPlan }) => {
           {accommodation && (
             <View style={[styles.box, styles.accommodationBox]}>
               <View style={styles.boxHeader}>
-                <Text style={styles.boxTitle}>🏨 Accommodation</Text>
+                <Text style={styles.boxTitle}>Accommodation</Text>
               </View>
               <View style={styles.boxContent}>
                 {renderContent(accommodation, 'accommodation')}
@@ -332,7 +366,7 @@ const TripPlanPDF = ({ tripPlan }) => {
           {plan && (
             <View style={[styles.box, styles.planBox]}>
               <View style={styles.boxHeader}>
-                <Text style={styles.boxTitle}>🗓️ Detailed Plan</Text>
+                <Text style={styles.boxTitle}>Detailed Plan</Text>
               </View>
               <View style={styles.boxContent}>
                 {renderContent(plan, 'plan')}

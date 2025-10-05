@@ -1,6 +1,7 @@
 import TripPlanBox from './TripPlanBox';
 import TripPlanPDF from './TripPlanPDF';
 import { pdf } from '@react-pdf/renderer';
+import React from 'react';
 
 const TripPlanContainer = ({ tripPlan }) => {
   const { transport, accommodation, plan, isGenerating } = tripPlan;
@@ -15,17 +16,34 @@ const TripPlanContainer = ({ tripPlan }) => {
 
   const handleDownloadPDF = async () => {
     try {
-      const blob = await pdf(<TripPlanPDF tripPlan={tripPlan} />).toBlob();
+      console.log('Starting PDF generation...', tripPlan);
+      
+      // Create the PDF document
+      const pdfElement = React.createElement(TripPlanPDF, { tripPlan });
+      const pdfDoc = pdf(pdfElement);
+      console.log('PDF document created');
+      
+      // Generate blob with proper UTF-8 support
+      const blob = await pdfDoc.toBlob();
+      console.log('PDF blob generated:', blob);
+      
+      // Create download link with proper encoding
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = 'trip-plan.pdf';
+      link.setAttribute('type', 'application/pdf');
+      
+      // Trigger download
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      
+      console.log('PDF download initiated');
     } catch (error) {
       console.error('Error generating PDF:', error);
+      alert('Error generating PDF: ' + error.message);
     }
   };
 
@@ -46,7 +64,7 @@ const TripPlanContainer = ({ tripPlan }) => {
               onClick={handleDownloadPDF}
               title="Download PDF"
             >
-              📄 Download PDF
+              Download PDF
             </button>
           )}
         </div>
