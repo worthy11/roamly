@@ -84,19 +84,34 @@
   border: #2d4238 2px solid;
   max-width: 500px;
   text-align: center;
+  
 }
 
-.button-info {
-  margin-top: 1rem;
-  background: #e6b474;
-  color: #fff;
+.close-info-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
   border: none;
-  border-radius: 30px;
-  padding: 0.7em 1.2em;
-  font-size: 1em;
+  color: white;
+  font-size: 1.8rem;
   cursor: pointer;
-  transition: background 0.2s;
-  font-weight: bold;
+  transition: color 0.2s ease;
+}
+
+.close-info-btn:hover {
+  color: #f9a826;
+}
+
+.info-content {
+  position: relative; /* konieczne, żeby X był pozycjonowany względem okna */
+  background: rgba(97, 128, 95, 0.811);
+  padding: 2rem;
+  border-radius: 8px;
+  border: #2d4238 2px solid;
+  max-width: 500px;
+  text-align: center;
+  color: white;
 }
 
 

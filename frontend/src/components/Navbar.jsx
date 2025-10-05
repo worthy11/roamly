@@ -7,27 +7,15 @@ import "./Navbar.css";
 function Navbar({ onOpenForm }) {
   const [showInfo, setShowInfo] = useState(false);
 
-  const handleInfoClick = () => {
-    setShowInfo(true);
-  };
-
-  const closeInfo = () => {
-    setShowInfo(false);
-  };
-
   return (
     <nav className="navbar">
       <span className="navbar-title">Roamly</span>
       <div className="navbar-links">
         <Link to="/"><AiFillHome size={30} title="Home" /></Link>
-        <button onClick={handleInfoClick} className="icon-button">
+        <button onClick={() => setShowInfo(true)} className="icon-button">
           <AiFillQuestionCircle size={30} title="About Us" />
         </button>
-
-        <button 
-          onClick={onOpenForm} 
-          className="button-navbar"
-        >
+        <button onClick={onOpenForm} className="button-navbar">
           Add a new trip
         </button>
       </div>
@@ -35,12 +23,25 @@ function Navbar({ onOpenForm }) {
       {showInfo && (
         <div className="info-modal">
           <div className="info-content">
-            <h2>How Roamly works</h2>
-            <p>
-              Roamly allows you to track your travels, add new trips, and explore other users' adventures.
-            </p>
-            <button className="button-info" onClick={closeInfo}>Close</button>
-          </div>
+          <button className="close-info-btn" onClick={() => setShowInfo(false)}>
+            ×
+          </button>
+          <h2>Welcome to Roamly!</h2>
+          <p>
+            Roamly is your personal travel companion that makes planning and enjoying trips <strong>stress-free, safe, and worry-free</strong>.
+          </p>
+          <ul>
+            <li>🗺️ Plan your trips directly in a chat interface – simple and interactive.</li>
+            <li>👥 Explore trips shared by other users and get inspiration for your next adventure.</li>
+            <li>🌴 Enjoy peaceful, safe, and worry-free vacations without stress or uncertainty.</li>
+          </ul>
+          <p>
+            With Roamly, travel planning becomes easy, fun, and completely tailored to your needs.
+          </p>
+          <p style={{ marginTop: "10px", fontWeight: "bold" }}>
+            💬 Click the chat in the bottom right corner to start your next adventure!
+          </p>
+        </div>
         </div>
       )}
     </nav>

@@ -3,34 +3,61 @@ from app.services.llm_service import llm_service
 from fastapi.responses import StreamingResponse
 from fastapi import APIRouter, HTTPException
 import json
-import asyncio
+from app.utils.sessions import get_history, update_session
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 @router.post("/text", response_model=ChatResponse)
 def chat(request: ChatRequest):
-    response = str(llm_service.chat(request.message))
-    return ChatResponse(response=response, user_id=request.user_id)
+    query = request.message
+    history = get_history(request.session_id)
+    
+    response = llm_service.chat(query, history)
+    update_session(request.session_id, "user", query)
+    update_session(request.session_id, "assistant", response)
+
+    return ChatResponse(response=response)
 
 @router.post("/generate", response_model=TripPlan)
 async def chat(request: ChatRequest):
     query = request.message
+    history = get_history(request.session_id)
+    
+    plan_output = ""
     async def event_stream():
         transport_result = await llm_service.run("transport", query)
-        yield f"data: {json.dumps({'stage': 'transport', 'result': transport_result})}\n\n"
+        transport_output = transport_result.get("output", str(transport_result))
+        yield f"data: {json.dumps({'stage': 'transport', 'result': transport_output})}\n\n"
 
-        accommodation_result = await llm_service.run("accommodation", f"Transport options: {transport_result}\n\nYour query: {query}")
-        yield f"data: {json.dumps({'stage': 'accommodation', 'result': accommodation_result})}\n\n"
+        accommodation_result = await llm_service.run("accommodation", f"Transport options: {transport_output}\n\nYour query: {query}")
+        accommodation_output = accommodation_result.get("output", str(accommodation_result))
+        yield f"data: {json.dumps({'stage': 'accommodation', 'result': accommodation_output})}\n\n"
 
-        plan_result = await llm_service.run("planner", f"Transport options: {transport_result}\n\nAccommodation result: {accommodation_result}\n\nYour query: {query}")
-        yield f"data: {json.dumps({'stage': 'plan', 'result': plan_result})}\n\n"
-
-        tips_result = await llm_service.run("tips", f"Transport options: {transport_result}\n\nAccommodation result: {accommodation_result}\n\nTrip plan: {plan_result}\n\nYour query: {query}")
-        yield f"data: {json.dumps({'stage': 'tips', 'result': tips_result})}\n\n"
-
-        risks_result = await llm_service.run("risks", f"Transport options: {transport_result}\n\nAccommodation result: {accommodation_result}\n\nTrip plan: {plan_result}\n\nTips: {tips_result}\n\nYour query: {query}")
-        yield f"data: {json.dumps({'stage': 'risks', 'result': risks_result})}\n\n"
+        modified_query = query
+        for attempt in range(3):
+            plan_result = await llm_service.run("planner", f"User query: {modified_query}, Transport options: {transport_output}, Accommodation options: {accommodation_output}", history)
+            plan_output = plan_result.get("output", str(plan_result))
+            try:
+                trip_plan = json.loads(plan_output)
+                json_str = json.dumps(trip_plan)  # serialize again to ensure valid JSON
+                yield f"data: {json.dumps({'stage': 'plan', 'result': plan_output})}\n\n"
+                break
+            except json.JSONDecodeError as e:
+                print(f"[Warning] Invalid JSON on attempt {attempt+1}: {e}")
+                modified_query = f"Previous output was invalid JSON:\n{plan_output}\nPlease return valid JSON only."
 
         yield "data: [DONE]\n\n"
+
+        tips_result = await llm_service.run("tips", f"User query: {modified_query}, Transport options: {transport_result}, Accommodation options: {accommodation_result}\n\nTrip plan: {plan_result}", history)
+        tips_output = tips_result.get("output", str(tips_result))
+        yield f"data: {json.dumps({'stage': 'tips', 'result': tips_output})}\n\n"
+
+        risks_result = await llm_service.run("risks", f"Transport options: {transport_result}\n\nAccommodation result: {accommodation_result}\n\nTrip plan: {plan_result}\n\nTips: {tips_result}\n\nYour query: {query}")
+        risks_output = risks_result.get("output", str(risks_result))
+        yield f"data: {json.dumps({'stage': 'risks', 'result': risks_output})}\n\n"
+
+    update_session(request.session_id, "user", query)
+    update_session(request.session_id, "assistant", plan_output)
+
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 

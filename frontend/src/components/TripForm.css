@@ -5,6 +5,7 @@
 }
 
 .trip-form {
+  position: relative; 
   width: 120%;              
   max-width: 500px;        
   padding: 20px;
@@ -12,25 +13,29 @@
   border-radius: 30px;
   background: rgba(45, 66, 56, 0.678);
   box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+  margin-top: 18%;
 }
 
 .trip-form-fields {
   display: flex;
   flex-direction: column;
-  gap: 1px; 
-  
+  align-items: stretch;
+  gap: 8px; 
+  max-height: 400px;
+  overflow-y: auto;  
+  padding-right: 5px; 
 }
 
 .trip-form-fields label {
+  width: 100%; 
   margin-bottom: 2px;      
   font-size: 0.85rem;
   font-weight: 500;
   color: #F6EEE8;  
-  align-self: flex-start;
+  text-align: left;
 }
 
 .trip-form-fields input,
-.trip-form-fields textarea,
 .trip-form-fields select {
   width: 100%;
   padding: 10px;
@@ -38,6 +43,21 @@
   border: 1px solid #263930fc;
   font-size: 14px;
   background-color: #4c6e5ecb;
+  color: #F6EEE8;
+  box-sizing: border-box; 
+  height: 35px; 
+  margin-top: 4px;
+}
+
+.trip-form-fields textarea {
+  min-height: 35px;       /* minimalna wysokość taka sama jak input */
+  padding: 8px 10px;      /* dopasowanie paddingu do inputów */
+  line-height: 1.2em;     /* wyrównanie tekstu w pionie */
+  box-sizing: border-box;
+  font-size: 14px;
+  background-color: #4c6e5ecb;
+  border: 1px solid #263930fc;
+  border-radius: 6px;
   color: #F6EEE8;
 }
 
@@ -50,19 +70,12 @@
   background-color: #334a3fcb;
 }
 
-.trip-form-fields {
-  display: flex;
-  flex-direction: column;
-  align-items: center; 
-}
-
 .trip-form-title {
   display: flex;
   align-items: center;
   justify-content: center; 
   gap: 2rem;
   margin-bottom: 15px;
-  color: #333;
   color: #F6EEE8;
   font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
   font-size: 1.7rem;
@@ -80,5 +93,20 @@
   transition: background 0.2s;
   font-weight: bold;
   margin-top: 5px; 
+}
+
+.trip-form-submit:hover {
+  background: #d7ab75;
+}
+
+.close-form-btn-two {
+  position: absolute; 
+  top: 10px; 
+  right: 10px; 
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  cursor: pointer;
+  color: #F6EEE8; 
 }
 

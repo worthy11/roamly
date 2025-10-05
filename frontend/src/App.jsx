@@ -13,6 +13,12 @@ function App() {
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedAttractions, setSelectedAttractions] = useState([]);
+
+  const handleAttractionSelect = (attractions) => {
+    setSelectedAttractions(attractions);
+    console.log("Set in App");
+  };
 
   useEffect(() => {
     const fetchTrips = async () => {
@@ -28,46 +34,50 @@ function App() {
     fetchTrips();
   }, []);
 
+  const handleChatClose = () => {
+    setIsChatOpen(false);
+
+    setIsFormOpen(false);
+  };
+
   return (
     <Layout>
       <Navbar onOpenForm={() => setIsFormOpen(true)} />
 
-      <Map 
+      <Map
         trips={trips}
         selectedTrip={selectedTrip}
         setSelectedTrip={setSelectedTrip}
+        selectedAttractions={selectedAttractions}
       />
 
       {!isChatOpen && (
-        <button 
-          className="open-chatbot-btn" 
+        <button
+          className="open-chatbot-btn"
           onClick={() => setIsChatOpen(true)}
         >
-          <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             Open ChatBot <BsRobot size={25} />
           </span>
         </button>
       )}
 
       <div className={`chat-form-wrapper ${isChatOpen ? "open" : ""}`}>
-        <button 
-          className="close-chatbot-btn" 
+        <button
+          className="close-chatbot-btn"
           onClick={() => setIsChatOpen(false)}
         >
           X
         </button>
-        <Chat />
+        <Chat onSelectAttractions={handleAttractionSelect} />
       </div>
 
       <div className={`slide-down-form ${isFormOpen ? "open" : ""}`}>
-  <button 
-    className="close-form-btn"
-    onClick={() => setIsFormOpen(false)}
-  >
-    ×
-  </button>
-  <Travel />
-</div>
+        <button className="close-form-btn" onClick={() => setIsFormOpen(false)}>
+          ×
+        </button>
+        <Travel />
+      </div>
     </Layout>
   );
 }

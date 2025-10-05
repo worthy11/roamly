@@ -93,16 +93,23 @@ class TripRead(BaseModel):
     model_config = dict(from_attributes=True)
 
 class ChatRequest(BaseModel):
-    user_id: int
+    session_id: str
     message: str
+
+class Attraction(BaseModel):
+    name: str
+    time_of_day: str
+    lat: float
+    lon: float
 
 class DailyPlan(BaseModel):
     day: int
     date: str
-    major_attractions: List[str]
-    transport_info: str
-    time_schedule: str
-    notes: str
+    description: str
+    major_attractions: Optional[List[Attraction]] = None
+    transport_info: Optional[str] = None
+    time_schedule: Optional[str] = None
+    notes: Optional[str] = None
 
 class TripPlan(BaseModel):
     destination: str
@@ -114,7 +121,6 @@ class TripPlan(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
-    user_id: int
     trip_plan: Optional[TripPlan] = None
 
 class TripRequest(BaseModel):
@@ -128,3 +134,6 @@ class TripRequest(BaseModel):
     pop_density: Optional[str] = "medium"
     budget: Optional[float] = 1000
     keypoints: Optional[List[str]] = []
+
+from langchain.output_parsers import PydanticOutputParser
+trip_plan_parser = PydanticOutputParser(pydantic_object=TripPlan)
