@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { FaSuitcase } from "react-icons/fa";
 import './TripForm.css';
 
-function TripForm({ onSubmit }) {
+function TripForm({ onSubmit, onClose }) { // Add onClose prop
   const [formData, setFormData] = useState({
     from: "",
     to: "",
@@ -28,6 +28,7 @@ function TripForm({ onSubmit }) {
 
   return (
     <div className="trip-form">
+      <button className="close-form-btn-two" onClick={onClose}>×</button> {/* Close button */}
       <h3 className="trip-form-title">
         Travel sheet <FaSuitcase size={28} title="Trip Form" />
       </h3>
@@ -47,7 +48,6 @@ function TripForm({ onSubmit }) {
           value={formData.to}
           onChange={handleFormChange}
         />
-
         <select
           name="transport"
           value={formData.transport}
@@ -58,7 +58,6 @@ function TripForm({ onSubmit }) {
           <option value="train">Transit 🚆</option>
           <option value="bus">Bus 🚌</option>
         </select>
-
         <input
           type="number"
           name="people"
@@ -67,7 +66,6 @@ function TripForm({ onSubmit }) {
           onChange={handleFormChange}
           min="1"
         />
-
         <label>Start date:</label>
         <input
           type="date"
@@ -75,7 +73,6 @@ function TripForm({ onSubmit }) {
           value={formData.dateFrom}
           onChange={handleFormChange}
         />
-
         <label>End date:</label>
         <input
           type="date"
@@ -83,7 +80,6 @@ function TripForm({ onSubmit }) {
           value={formData.dateTo}
           onChange={handleFormChange}
         />
-
         <input
           type="number"
           name="budget"
@@ -92,7 +88,6 @@ function TripForm({ onSubmit }) {
           onChange={handleFormChange}
           min="0"
         />
-
         <select
           name="activity"
           value={formData.activity}
@@ -103,7 +98,6 @@ function TripForm({ onSubmit }) {
           <option value="medium">Medium</option>
           <option value="high">High</option>
         </select>
-
         <select
           name="population"
           value={formData.population}
@@ -114,14 +108,12 @@ function TripForm({ onSubmit }) {
           <option value="medium">Medium</option>
           <option value="high">High</option>
         </select>
-
         <textarea
           name="attractions"
           placeholder="Key attractions / points of interest"
           value={formData.attractions}
           onChange={handleFormChange}
         ></textarea>
-
         <button type="submit" className="trip-form-submit">
           Send
         </button>

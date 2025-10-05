@@ -34,7 +34,7 @@ def get_all_trips(db: Session = Depends(get_db), response_model=List[models.Trip
 
 
 @router.post("/", response_model=models.TripRead)
-def create_trip(trip: models.TripCreate, db: Session = Depends(get_db), user_id: int = 1):
+def create_trip(trip: models.TripCreate, db: Session = Depends(get_db)):
   
     embedding_json = None
     if trip.description:
@@ -42,7 +42,6 @@ def create_trip(trip: models.TripCreate, db: Session = Depends(get_db), user_id:
         embedding_json = embedding_service.serialize_embedding(embedding)
 
     new_trip = models.Trip(
-        user_id=user_id,
         country=trip.country,
         description=trip.description,
         duration=trip.duration,

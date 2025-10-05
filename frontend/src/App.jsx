@@ -28,6 +28,12 @@ function App() {
     fetchTrips();
   }, []);
 
+  const handleChatClose = () => {
+      setIsChatOpen(false);
+
+      setIsFormOpen(false);
+    };
+
   return (
     <Layout>
       <Navbar onOpenForm={() => setIsFormOpen(true)} />

@@ -53,7 +53,6 @@ function Chat() {
   };
 
   const handleFormSubmit = async (formData) => {
-
     setFormOpen(false);
 
     const tripQuery = `I want to plan a trip with the following details:
@@ -124,7 +123,6 @@ function Chat() {
                   return agentResult;
                 }
                 if (agentResult && typeof agentResult === 'object') {
-                 
                   if (agentResult.output) {
                     return agentResult.output;
                   }
@@ -201,7 +199,7 @@ function Chat() {
       </form>
 
       <div className={`trip-form-wrapper ${formOpen ? 'open' : ''}`}>
-        <TripForm onSubmit={handleFormSubmit} />
+        <TripForm onSubmit={handleFormSubmit} onClose={() => setFormOpen(false)} /> {/* Pass onClose */}
       </div>
     </div>
   );

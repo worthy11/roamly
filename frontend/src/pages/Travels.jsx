@@ -11,7 +11,6 @@ function Travel() {
   const [activityLevel, setActivityLevel] = useState("");
   const [budget, setBudget] = useState("");
   const [cities, setCities] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
