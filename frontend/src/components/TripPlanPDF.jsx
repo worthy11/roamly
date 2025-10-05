@@ -30,13 +30,13 @@ const styles = StyleSheet.create({
   content: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 4,
   },
   box: {
     width: '48%',
-    marginBottom: 8,
+    marginBottom: 4,
     backgroundColor: '#f8f9fa',
-    borderRadius: 6,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: '#e6b474',
     borderStyle: 'solid',
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   },
   boxHeader: {
     backgroundColor: '#e6b474',
-    padding: 8,
+    padding: 4,
     borderBottomWidth: 1,
     borderBottomColor: '#d7ab75',
     borderBottomStyle: 'solid',
@@ -56,10 +56,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   boxContent: {
-    padding: 8,
+    padding: 4,
     color: '#2d4238',
     fontSize: 9,
-    lineHeight: 1.3,
+    lineHeight: 1.1,
   },
   transportBox: {
     borderLeftWidth: 3,
@@ -77,9 +77,19 @@ const styles = StyleSheet.create({
     borderLeftStyle: 'solid',
     width: '100%', // Full width for the plan box
   },
+  tipsBox: {
+    borderLeftWidth: 3,
+    borderLeftColor: '#9C27B0',
+    borderLeftStyle: 'solid',
+  },
+  risksBox: {
+    borderLeftWidth: 3,
+    borderLeftColor: '#F44336',
+    borderLeftStyle: 'solid',
+  },
   paragraph: {
-    marginBottom: 4,
-    lineHeight: 1.3,
+    marginBottom: 1,
+    lineHeight: 1.1,
   },
   strong: {
     fontWeight: 'bold',
@@ -92,35 +102,40 @@ const styles = StyleSheet.create({
   h3: {
     fontSize: 11,
     fontWeight: 'bold',
-    marginBottom: 4,
-    marginTop: 6,
+    marginBottom: 1,
+    marginTop: 1,
     color: '#2d4238',
     borderBottomWidth: 1,
     borderBottomColor: '#e6b474',
     borderBottomStyle: 'solid',
     paddingBottom: 1,
+    lineHeight: 1.1,
   },
   h4: {
     fontSize: 10,
     fontWeight: 'bold',
-    marginBottom: 3,
-    marginTop: 4,
+    marginBottom: 0.5,
+    marginTop: 1,
     color: '#2d4238',
+    lineHeight: 1.1,
   },
   h5: {
     fontSize: 9,
     fontWeight: 'bold',
-    marginBottom: 2,
-    marginTop: 3,
+    marginBottom: 0.5,
+    marginTop: 1,
     color: '#2d4238',
+    lineHeight: 1.1,
   },
   list: {
-    marginLeft: 8,
-    marginBottom: 4,
+    marginLeft: 6,
+    marginBottom: 1,
+    marginTop: 0.5,
   },
   listItem: {
-    marginBottom: 2,
-    paddingLeft: 3,
+    marginBottom: 0.5,
+    paddingLeft: 2,
+    lineHeight: 1.1,
   },
 });
 
@@ -233,6 +248,83 @@ const parseContentForPDF = (content) => {
   return elements;
 };
 
+// Helper function to parse and format JSON trip plan
+const parseTripPlanJSON = (planContent) => {
+  if (!planContent) return planContent;
+  
+  try {
+    // Try to parse as JSON
+    const parsed = JSON.parse(planContent);
+    
+    // If it's a valid JSON object, format it nicely
+    if (typeof parsed === 'object' && parsed !== null) {
+      let formatted = '';
+      
+      // Handle different trip plan structures
+      if (parsed.destination) {
+        formatted += `**Destination:** ${parsed.destination}\n\n`;
+      }
+      if (parsed.duration_days) {
+        formatted += `**Duration:** ${parsed.duration_days}\n\n`;
+      }
+      if (parsed.travel) {
+        formatted += `**Travel:** ${parsed.travel}\n\n`;
+      }
+      if (parsed.accommodation) {
+        formatted += `**Accommodation:** ${parsed.accommodation}\n\n`;
+      }
+      if (parsed.costs) {
+        formatted += `**Costs:** ${parsed.costs}\n\n`;
+      }
+      if (parsed.daily_plan && Array.isArray(parsed.daily_plan)) {
+        formatted += `## Daily Itinerary\n\n`;
+        parsed.daily_plan.forEach((day, index) => {
+          formatted += `### Day ${day.day || index + 1}`;
+          if (day.date) {
+            formatted += ` - ${day.date}`;
+          }
+          formatted += `\n\n`;
+          
+          if (day.description) {
+            formatted += `${day.description}\n\n`;
+          }
+          
+          if (day.major_attractions && Array.isArray(day.major_attractions)) {
+            formatted += `**Attractions:**\n`;
+            day.major_attractions.forEach(attraction => {
+              formatted += `- ${attraction.name}`;
+              if (attraction.time_of_day) {
+                formatted += ` (${attraction.time_of_day})`;
+              }
+              formatted += `\n`;
+            });
+            formatted += `\n`;
+          }
+          
+          if (day.transport_info) {
+            formatted += `**Transport:** ${day.transport_info}\n\n`;
+          }
+          
+          if (day.time_schedule) {
+            formatted += `**Schedule:** ${day.time_schedule}\n\n`;
+          }
+          
+          if (day.notes) {
+            formatted += `**Notes:** ${day.notes}\n\n`;
+          }
+        });
+      }
+      
+      return formatted || planContent;
+    }
+    
+    return planContent;
+  } catch (e) {
+    // If not valid JSON, return original content
+    return planContent;
+  }
+};
+
 // Helper function to parse inline formatting (bold, italic)
 const parseInlineFormatting = (text) => {
   if (!text) return text;
@@ -265,7 +357,7 @@ const parseInlineFormatting = (text) => {
 };
 
 const TripPlanPDF = ({ tripPlan }) => {
-  const { transport, accommodation, plan } = tripPlan;
+  const { transport, accommodation, plan, tips, risks } = tripPlan;
   
   const renderText = (text) => {
     const formattedParts = parseInlineFormatting(text);
@@ -290,7 +382,9 @@ const TripPlanPDF = ({ tripPlan }) => {
   };
 
   const renderContent = (content, type) => {
-    const elements = parseContentForPDF(content);
+    // Parse JSON for plan content
+    const processedContent = type === 'plan' ? parseTripPlanJSON(content) : content;
+    const elements = parseContentForPDF(processedContent);
     
     return elements.map((element, index) => {
       switch (element.type) {
@@ -370,6 +464,28 @@ const TripPlanPDF = ({ tripPlan }) => {
               </View>
               <View style={styles.boxContent}>
                 {renderContent(plan, 'plan')}
+              </View>
+            </View>
+          )}
+          
+          {tips && (
+            <View style={[styles.box, styles.tipsBox]}>
+              <View style={styles.boxHeader}>
+                <Text style={styles.boxTitle}>Travel Tips</Text>
+              </View>
+              <View style={styles.boxContent}>
+                {renderContent(tips, 'tips')}
+              </View>
+            </View>
+          )}
+          
+          {risks && (
+            <View style={[styles.box, styles.risksBox]}>
+              <View style={styles.boxHeader}>
+                <Text style={styles.boxTitle}>Important Risks & Considerations</Text>
+              </View>
+              <View style={styles.boxContent}>
+                {renderContent(risks, 'risks')}
               </View>
             </View>
           )}
