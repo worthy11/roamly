@@ -14,7 +14,7 @@ def chat(request: ChatRequest):
     
     response = llm_service.chat(query, history)
     update_session(request.session_id, "user", query)
-    update_session(request.session_id, "assisstant", response)
+    update_session(request.session_id, "assistant", response)
 
     return ChatResponse(response=response)
 
@@ -49,7 +49,7 @@ async def chat(request: ChatRequest):
         yield "data: [DONE]\n\n"
 
     update_session(request.session_id, "user", query)
-    update_session(request.session_id, "assisstant", plan_output)
+    update_session(request.session_id, "assistant", plan_output)
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
