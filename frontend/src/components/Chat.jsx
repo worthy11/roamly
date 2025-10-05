@@ -5,6 +5,7 @@ import { API_BASE } from "../config";
 import TripForm from "./TripForm";
 import TripPlanContainer from "./TripPlanContainer";
 import { getSessionId } from "../session";
+import { MarkdownRenderer } from "../utils/markdownUtils";
 
 function Chat({ onSelectAttractions }) {
   const [message, setMessage] = useState("");
@@ -190,7 +191,11 @@ function Chat({ onSelectAttractions }) {
         )}
         {chat.map((msg, idx) => (
           <div key={idx} className={`chat-message ${msg.from}`}>
-            {msg.text}
+            {msg.from === 'bot' ? (
+              <MarkdownRenderer content={msg.text} />
+            ) : (
+              msg.text
+            )}
           </div>
         ))}
 
